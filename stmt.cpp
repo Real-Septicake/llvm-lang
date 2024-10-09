@@ -15,11 +15,15 @@ void AST::Expression::accept(StmtVisitor *visitor) {
 }
 
 AST::Function::Function(Token *name, std::vector<Token *> params,
+                        std::vector<std::pair<value::ValueType, Token *>> types,
+                        std::pair<value::ValueType, Token *> ret_type,
                         std::vector<Stmt *> body)
     : Stmt(StmtType::FunctionType) {
-    this->name   = name;
-    this->params = params;
-    this->body   = body;
+    this->name     = name;
+    this->params   = params;
+    this->types    = types;
+    this->ret_type = ret_type;
+    this->body     = body;
 }
 void AST::Function::accept(StmtVisitor *visitor) {
     visitor->visitFunctionStmt(this);

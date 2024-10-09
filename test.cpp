@@ -1,7 +1,7 @@
-#include "scanner.hpp"
-#include "parser.hpp"
-#include "error.hpp"
 #include "ast_printer.hpp"
+#include "error.hpp"
+#include "parser.hpp"
+#include "scanner.hpp"
 
 #include <fstream>
 #include <iostream>

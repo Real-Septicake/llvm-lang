@@ -62,8 +62,12 @@ class Function : public Stmt {
   public:
     Token *name;
     std::vector<Token *> params;
+    std::vector<std::pair<value::ValueType, Token *>> types;
+    std::pair<value::ValueType, Token *> ret_type;
     std::vector<Stmt *> body;
     Function(Token *name, std::vector<Token *> params,
+             std::vector<std::pair<value::ValueType, Token *>> types,
+             std::pair<value::ValueType, Token *> ret_type,
              std::vector<Stmt *> body);
     void accept(StmtVisitor *visitor) override;
 };

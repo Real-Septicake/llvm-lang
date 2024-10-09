@@ -46,3 +46,10 @@ compiler: $(COMPILER_OBJS) $(COMPILER_MAIN)
 gen-ast:
 	python gen_ast.py
 	@make format
+
+clean:
+	rm -rf $(BUILD_DIR)
+	rm -f $(COMPILER_OUT)
+
+all: build-dir compiler
+	@echo "DEBUG is set to $(DEBUG)"

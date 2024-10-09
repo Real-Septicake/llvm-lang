@@ -89,12 +89,13 @@ void ASTPrinter::visitExpressionStmt(AST::Expression *stmt) {
 }
 void ASTPrinter::visitFunctionStmt(AST::Function *stmt) {
     std::cout << "(fn " << stmt->name->text << " (";
-    for (Token *param : stmt->params) {
-        if (param != stmt->params.at(0))
+    for (int i = 0; i < stmt->params.size(); i++) {
+        if (i)
             std::cout << ", ";
-        std::cout << param->text;
+        std::cout << stmt->params[i]->text << " : "
+                  << stmt->types[i].second->text;
     }
-    std::cout << ")\n";
+    std::cout << ") : " << stmt->ret_type.second->text << "\n";
 
     for (AST::Stmt *body : stmt->body) {
         body->accept(this);
@@ -143,8 +144,7 @@ void ASTPrinter::visitReturnStmt(AST::Return *stmt) {
     std::cout << ")" << std::endl;
 }
 void ASTPrinter::visitVarStmt(AST::Var *stmt) {
-    std::cout << "(var " << stmt->name->text
-              << " " << stmt->type.second->text;
+    std::cout << "(var " << stmt->name->text << " " << stmt->type.second->text;
     if (stmt->initializer != nullptr) {
         std::cout << " = ";
         stmt->initializer->accept(this);

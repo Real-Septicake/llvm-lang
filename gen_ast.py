@@ -108,7 +108,7 @@ defineAst("Expr", "expression", [
 defineAst("Stmt", "statement", [
     ("Block", "std::vector<Stmt*> statements"),
     ("Expression", "Expr* expression"),
-    ("Function", "Token* name, std::vector<Token*> params, std::vector<Stmt*> body"),
+    ("Function", "Token* name, std::vector<Token*> params, std::vector<std::pair<value::ValueType\"comma\"Token*>> types, std::pair<value::ValueType\"comma\"Token*> ret_type, std::vector<Stmt*> body"),
     ("Class", "Token* name, AST::Variable* superclass, std::vector<AST::Function*> methods"),
     ("If", "Expr* condition, Stmt* thenBranch, Stmt* elseBranch"),
     ("Print", "Expr* expression"),

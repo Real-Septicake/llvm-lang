@@ -3,14 +3,14 @@
 #include "error.hpp"
 #include "value.hpp"
 
-#include <string>
-#include <vector>
-#include <unordered_map>
 #include <iostream>
+#include <string>
+#include <unordered_map>
+#include <vector>
 
 static std::unordered_map<TokenKind, value::ValueType> type_map = {
     {TokenKind::TOKEN_BOOL, value::ValueType::VAL_BOOL},
-    {TokenKind::TOKEN_NUM, value::ValueType::VAL_NUM}
+    {TokenKind::TOKEN_NUM,  value::ValueType::VAL_NUM }
 };
 
 std::vector<Stmt *> parser::Parser::parse() {
@@ -83,10 +83,10 @@ Token *parser::Parser::consume(TokenKind type, std::string message) {
 }
 
 std::pair<value::ValueType, Token *> parser::Parser::consume_type() {
-    if(match({TOKEN_BOOL, TOKEN_NUM})) {
-        Token *tok = previous();
+    if (match({TOKEN_BOOL, TOKEN_NUM})) {
+        Token *tok    = previous();
         auto val_type = type_map.find(tok->type);
-        if(val_type != type_map.end()) {
+        if (val_type != type_map.end()) {
             return std::make_pair(val_type->second, tok);
         }
     }
@@ -121,7 +121,8 @@ AST::Function *parser::Parser::function(std::string kind) {
     Token *name = consume(TOKEN_IDENTIFIER, "Expect " + kind + " name.");
     consume(TOKEN_LEFT_PAREN, "Expect '(' after " + kind + " name.");
 
-    std::vector<Token *> params = std::vector<Token *>();
+    std::vector<Token *> params;
+    std::vector<std::pair<value::ValueType, Token *>> types;
     if (!check(TOKEN_RIGHT_PAREN)) {
         do {
             if (params.size() >= 255) {
@@ -129,14 +130,21 @@ AST::Function *parser::Parser::function(std::string kind) {
             }
 
             Token *param = consume(TOKEN_IDENTIFIER, "Expect parameter name.");
+            consume(TOKEN_COLON, "Expect ':' after parameter.");
+            auto type = consume_type();
             params.push_back(param);
+            types.push_back(type);
         } while (match({TOKEN_COMMA}));
     }
     consume(TOKEN_RIGHT_PAREN, "Expect ')' after parameters.");
 
+    consume(TOKEN_COLON, "Expect ':' after " + kind + " parameters");
+
+    auto ret_type = consume_type();
+
     consume(TOKEN_LEFT_BRACE, "Expect '{' before " + kind + " body.");
     std::vector<Stmt *> body = block();
-    return new AST::Function(name, params, body);
+    return new AST::Function(name, params, types, ret_type, body);
 }
 
 AST::Var *parser::Parser::varDeclaration() {

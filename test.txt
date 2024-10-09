@@ -1,1 +1,3 @@
-var test : num = 44.0;
+fn test(i : num) : num {
+    return;
+}
