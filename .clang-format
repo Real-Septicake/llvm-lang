@@ -1,0 +1,14 @@
+---
+BasedOnStyle: LLVM
+ColumnLimit: '80'
+IncludeBlocks: Regroup
+IndentWidth: '4'
+Language: Cpp
+SortIncludes: 'true'
+UseTab: Never
+AllowShortFunctionsOnASingleLine: Empty
+AlignAfterOpenBracket: Align
+AlignArrayOfStructures: Left
+AlignConsecutiveAssignments: Consecutive
+AlignConsecutiveMacros: AcrossEmptyLines
+AlignOperands: Align
