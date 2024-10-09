@@ -1,3 +1,4 @@
 fn test(i : num) : num {
-    return;
+    var t : bool = false;
+    return 4.0;
 }

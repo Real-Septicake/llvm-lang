@@ -16,6 +16,7 @@ void ASTPrinter::visitAssignExpr(AST::Assign *expr) {
     expr->value->accept(this);
     std::cout << ")";
 }
+
 void ASTPrinter::visitBinaryExpr(AST::Binary *expr) {
     std::cout << "(" << expr->op->text << " ";
     expr->left->accept(this);
@@ -23,6 +24,7 @@ void ASTPrinter::visitBinaryExpr(AST::Binary *expr) {
     expr->right->accept(this);
     std::cout << ")";
 }
+
 void ASTPrinter::visitCallExpr(AST::Call *expr) {
     std::cout << "(call ";
     expr->callee->accept(this);
@@ -32,16 +34,19 @@ void ASTPrinter::visitCallExpr(AST::Call *expr) {
     }
     std::cout << ")";
 }
+
 void ASTPrinter::visitGetExpr(AST::Get *expr) {
     std::cout << "(. ";
     expr->object->accept(this);
     std::cout << " " << expr->name->text << ")";
 }
+
 void ASTPrinter::visitGroupingExpr(AST::Grouping *expr) {
     std::cout << "(group ";
     expr->expression->accept(this);
     std::cout << ")";
 }
+
 void ASTPrinter::visitLogicalExpr(AST::Logical *expr) {
     std::cout << "(" << expr->op->text << " ";
     expr->left->accept(this);
@@ -49,6 +54,7 @@ void ASTPrinter::visitLogicalExpr(AST::Logical *expr) {
     expr->right->accept(this);
     std::cout << ")";
 }
+
 void ASTPrinter::visitSetExpr(AST::Set *expr) {
     std::cout << "(= ";
     expr->object->accept(this);
@@ -56,23 +62,29 @@ void ASTPrinter::visitSetExpr(AST::Set *expr) {
     expr->value->accept(this);
     std::cout << ")";
 }
+
 void ASTPrinter::visitSuperExpr(AST::Super *expr) {
     std::cout << "(super " << expr->method->text << ")";
 }
+
 void ASTPrinter::visitThisExpr(AST::This *expr) {
     std::cout << "this";
 }
+
 void ASTPrinter::visitUnaryExpr(AST::Unary *expr) {
     std::cout << "(" << expr->op->text << " ";
     expr->right->accept(this);
     std::cout << ")";
 }
+
 void ASTPrinter::visitVariableExpr(AST::Variable *expr) {
     std::cout << expr->name->text;
 }
+
 void ASTPrinter::visitLiteralExpr(AST::Literal *expr) {
     value::printValue(expr->value);
 }
+
 void ASTPrinter::visitBlockStmt(AST::Block *stmt) {
     std::cout << "(block\n";
 
@@ -82,11 +94,13 @@ void ASTPrinter::visitBlockStmt(AST::Block *stmt) {
 
     std::cout << "end block)" << std::endl;
 }
+
 void ASTPrinter::visitExpressionStmt(AST::Expression *stmt) {
     std::cout << "(; ";
     stmt->expression->accept(this);
     std::cout << ")" << std::endl;
 }
+
 void ASTPrinter::visitFunctionStmt(AST::Function *stmt) {
     std::cout << "(fn " << stmt->name->text << " (";
     for (int i = 0; i < stmt->params.size(); i++) {
@@ -103,6 +117,7 @@ void ASTPrinter::visitFunctionStmt(AST::Function *stmt) {
 
     std::cout << "end fn)" << std::endl;
 }
+
 void ASTPrinter::visitClassStmt(AST::Class *stmt) {
     std::cout << "(class " << stmt->name->text;
 
@@ -119,6 +134,7 @@ void ASTPrinter::visitClassStmt(AST::Class *stmt) {
 
     std::cout << "end class)" << std::endl;
 }
+
 void ASTPrinter::visitIfStmt(AST::If *stmt) {
     std::cout << "(if ";
     stmt->condition->accept(this);
@@ -130,11 +146,13 @@ void ASTPrinter::visitIfStmt(AST::If *stmt) {
     }
     std::cout << "end if)" << std::endl;
 }
+
 void ASTPrinter::visitPrintStmt(AST::Print *stmt) {
     std::cout << "(print ";
     stmt->expression->accept(this);
     std::cout << ")" << std::endl;
 }
+
 void ASTPrinter::visitReturnStmt(AST::Return *stmt) {
     std::cout << "(return";
     if (stmt->value != nullptr) {
@@ -143,14 +161,16 @@ void ASTPrinter::visitReturnStmt(AST::Return *stmt) {
     }
     std::cout << ")" << std::endl;
 }
+
 void ASTPrinter::visitVarStmt(AST::Var *stmt) {
-    std::cout << "(var " << stmt->name->text << " " << stmt->type.second->text;
+    std::cout << "(var " << stmt->name->text << " : " << stmt->type.second->text;
     if (stmt->initializer != nullptr) {
         std::cout << " = ";
         stmt->initializer->accept(this);
     }
     std::cout << ")" << std::endl;
 }
+
 void ASTPrinter::visitWhileStmt(AST::While *stmt) {
     std::cout << "(while ";
     stmt->condition->accept(this);
@@ -158,6 +178,7 @@ void ASTPrinter::visitWhileStmt(AST::While *stmt) {
     stmt->body->accept(this);
     std::cout << "end while)" << std::endl;
 }
+
 void ASTPrinter::visitForStmt(AST::For *stmt) {
     std::cout << "(for ";
     if (stmt->initializer != nullptr) {
