@@ -5,7 +5,7 @@ DEBUG ?= false
 SHOW_EXEC ?= false
 
 COMPILER_OBJS := scanner.o parser.o token.o error.o expr.o stmt.o value.o ast_printer.o
-COMPILER_MAIN := test.o
+COMPILER_MAIN := compiler.o
 COMPILER_OUT := compiler.out
 
 CPP_STD := -std=c++20
