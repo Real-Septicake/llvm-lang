@@ -61,8 +61,11 @@ void AST::Return::accept(StmtVisitor *visitor) {
     visitor->visitReturnStmt(this);
 }
 
-AST::Var::Var(Token *name, Expr *initializer) : Stmt(StmtType::VarType) {
+AST::Var::Var(Token *name, std::pair<value::ValueType, Token *> type,
+              Expr *initializer)
+    : Stmt(StmtType::VarType) {
     this->name        = name;
+    this->type        = type;
     this->initializer = initializer;
 }
 void AST::Var::accept(StmtVisitor *visitor) {

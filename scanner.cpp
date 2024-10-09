@@ -7,15 +7,15 @@
 
 static std::unordered_map<std::string, TokenKind> keywords = {
     {"and",      TokenKind::TOKEN_AND     },
+    {"bool",     TokenKind::TOKEN_BOOL    },
     {"break",    TokenKind::TOKEN_BREAK   },
-    {"class",    TokenKind::TOKEN_CLASS   },
     {"continue", TokenKind::TOKEN_CONTINUE},
     {"else",     TokenKind::TOKEN_ELSE    },
     {"false",    TokenKind::TOKEN_FALSE   },
     {"for",      TokenKind::TOKEN_FOR     },
     {"fn",       TokenKind::TOKEN_FN      },
     {"if",       TokenKind::TOKEN_IF      },
-    {"nil",      TokenKind::TOKEN_NIL     },
+    {"num",      TokenKind::TOKEN_NUM     },
     {"or",       TokenKind::TOKEN_OR      },
     {"print",    TokenKind::TOKEN_PRINT   },
     {"return",   TokenKind::TOKEN_RETURN  },
@@ -101,6 +101,9 @@ void Scanner::scanToken() {
     case '*':
         addToken(TokenKind::TOKEN_STAR);
         break;
+    case ':':
+        addToken(TokenKind::TOKEN_COLON);
+        break;
     case '!':
         addToken(match('=') ? TokenKind::TOKEN_BANG_EQUAL
                             : TokenKind::TOKEN_BANG);
@@ -132,9 +135,6 @@ void Scanner::scanToken() {
     case '\n':
         line++;
         break;
-    case '"':
-        string();
-        break;
     default:
         if (isDigit(c)) {
             number();
@@ -158,21 +158,6 @@ void Scanner::identifier() {
         addToken(TokenKind::TOKEN_IDENTIFIER);
     else
         addToken(type->second);
-}
-
-void Scanner::string() {
-    while (peek() != '"' && !isAtEnd()) {
-        if (peek() == '\n')
-            line++;
-        advance();
-    }
-
-    if (isAtEnd()) {
-        error::error(line, "Unterminated string.");
-    }
-
-    advance();
-    addToken(TokenKind::TOKEN_STRING);
 }
 
 void Scanner::number() {

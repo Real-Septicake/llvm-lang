@@ -1,1 +1,1 @@
-%foo = type i32
+var test : num = 44.0;

@@ -7,7 +7,7 @@
 /// @brief A namespace containing members used for values
 namespace value {
 /// @brief Types of values
-enum ValueType { VAL_BOOL, VAL_NIL, VAL_NUM, VAL_STR };
+enum ValueType { VAL_BOOL, VAL_NUM };
 
 /// @brief Struct representing values
 typedef struct {
@@ -19,8 +19,6 @@ typedef struct {
         bool boolean;
         /// @brief %Value of a type VAL_NUM
         double number;
-        /// @brief %Value of a type VAL_STR
-        std::string *str;
     } as;
 } Value;
 
@@ -31,33 +29,11 @@ inline bool isBool(Value value) {
     return value.type == VAL_BOOL;
 }
 
-/// @brief Checks if the value is a nil
-/// @param value The value to check
-/// @return True if the value is a nil, false otherwise
-inline bool isNil(Value value) {
-    return value.type == VAL_NIL;
-}
-
 /// @brief Checks if the value is a num
 /// @param value The value to check
 /// @return True if the value is a num, false otherwise
 inline bool isNum(Value value) {
     return value.type == VAL_NUM;
-}
-
-/// @brief Checks if the value is an object
-/// @param value The value to check
-/// @return True if the value is an object, false otherwise
-inline bool isStr(Value value) {
-    return value.type == VAL_STR;
-}
-
-/// @brief Acts as an unchecked cast from Value to the value's std::string
-/// representation
-/// @param value The Value to cast
-/// @return The std::string representation
-inline std::string *asStr(Value value) {
-    return value.as.str;
 }
 
 /// @brief Acts as an unchecked cast from Value to the value's boolean
@@ -83,24 +59,11 @@ inline Value boolVal(bool value) {
     return (Value){VAL_BOOL, {.boolean = value}};
 }
 
-/// @brief Creates a nil Value
-/// @return The created Value
-inline Value nilVal() {
-    return (Value){VAL_NIL, {.number = 0}};
-}
-
 /// @brief Creates a num Value with the specified value
 /// @param value The number to set the Value to
 /// @return The created Value
 inline Value numVal(double value) {
     return (Value){VAL_NUM, {.number = value}};
-}
-
-/// @brief Creates an str Value with the specified value
-/// @param value The std::string to set the Value to
-/// @return The created Value
-inline Value strVal(std::string *value) {
-    return (Value){VAL_STR, {.str = value}};
 }
 
 /// @brief Checks if the two provided Value%s are equal

@@ -4,6 +4,10 @@ DEBUG ?= false
 
 SHOW_EXEC ?= false
 
+COMPILER_OBJS := scanner.o parser.o token.o error.o expr.o stmt.o value.o ast_printer.o
+COMPILER_MAIN := test.o
+COMPILER_OUT := compiler.out
+
 CPP_STD := -std=c++20
 
 INCLUDES := -Itermcolor/include
@@ -30,9 +34,15 @@ format: $(C_FILES)
 build-dir:
 	$(SILENCE)test -d $(BUILD_DIR) || mkdir $(BUILD_DIR)
 	
-%.o : %.cc
+%.o : %.cpp
 	$(SILENCE)g++ $(CPP_STD) -c $(DEBUG_FLAGS) $(OPT_FLAGS) $(INCLUDES) $< -o $(BUILD_DIR)/$@
 	
+compiler: $(COMPILER_OBJS) $(COMPILER_MAIN)
+	@echo "Building compiler..."
+	$(SILENCE)d=$$(date +%s) \
+	; g++ $(CPP_STD) $(DEBUG_FLAGS) $(OPT_FLAGS) $(addprefix $(BUILD_DIR)/, $(COMPILER_MAIN) $(COMPILER_OBJS)) $(patsubst %.o,%.hpp, $(COMPILER_OBJS)) -o $(COMPILER_OUT) \
+	&& echo "Compiler build took $$(($$(date +%s)-d)) seconds."
+
 gen-ast:
 	python gen_ast.py
 	@make format

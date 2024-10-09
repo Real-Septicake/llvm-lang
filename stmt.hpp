@@ -110,8 +110,10 @@ class Return : public Stmt {
 class Var : public Stmt {
   public:
     Token *name;
+    std::pair<value::ValueType, Token *> type;
     Expr *initializer;
-    Var(Token *name, Expr *initializer);
+    Var(Token *name, std::pair<value::ValueType, Token *> type,
+        Expr *initializer);
     void accept(StmtVisitor *visitor) override;
 };
 

@@ -4,6 +4,7 @@
 #include "token.hpp"
 #include "value.hpp"
 
+#include <utility>
 #include <vector>
 /// @brief A namespace containing members used for the creation and usage of the
 /// abstract syntax tree

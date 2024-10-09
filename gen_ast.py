@@ -1,6 +1,15 @@
 def isVowel(char: chr):
     return char == 'a' or char == 'e' or char == 'i' or char == 'o' or char == 'u'
 
+def replaceAll(file, str, replace):
+    with open(file, 'r') as read:
+        filedata = read.read()
+    
+    filedata = filedata.replace(str, replace)
+
+    with open(file, 'w') as write:
+        write.write(filedata)
+
 def defineAst(baseName: str, longName: str, types: list[tuple[str, str]], includes: list[str] = []):
     f = open(baseName.lower() + ".hpp", "w", encoding="utf-8")
     
@@ -60,6 +69,9 @@ def defineAst(baseName: str, longName: str, types: list[tuple[str, str]], includ
     
     f.write("\n#endif")
 
+    f.close()
+
+    replaceAll(baseName.lower() + ".hpp", "\"comma\"", ",")
 
     f = open(baseName.lower() + ".cpp", "w", encoding="utf-8")
 
@@ -74,6 +86,10 @@ def defineAst(baseName: str, longName: str, types: list[tuple[str, str]], includ
         f.write("visitor->visit" + type[0].strip() + baseName + "(this);\n")
         f.write("}\n\n")
 
+    f.close()
+
+    replaceAll(baseName.lower() + ".cpp", "\"comma\"", ",")
+
 defineAst("Expr", "expression", [
     ("Assign", "Token* name, Expr* value"),
     ("Binary", "Expr* left, Token* op, Expr* right"),
@@ -87,7 +103,7 @@ defineAst("Expr", "expression", [
     ("Unary", "Token* op, Expr* right"),
     ("Variable", "Token* name"),
     ("Literal", "value::Value value")
-], ["<vector>", "\"value.hpp\""])
+], ["<vector>", "<utility>", "\"value.hpp\""])
 
 defineAst("Stmt", "statement", [
     ("Block", "std::vector<Stmt*> statements"),
@@ -97,7 +113,7 @@ defineAst("Stmt", "statement", [
     ("If", "Expr* condition, Stmt* thenBranch, Stmt* elseBranch"),
     ("Print", "Expr* expression"),
     ("Return", "Token* keyword, Expr* value"),
-    ("Var", "Token* name, Expr* initializer"),
+    ("Var", "Token* name, std::pair<value::ValueType\"comma\"Token*> type, Expr* initializer"),
     ("While", "Expr* condition, Stmt* body"),
     ("For", "Stmt* initializer, Expr* condition, Expr* increment, Stmt* body"),
     ("Break", "Token* keyword"),

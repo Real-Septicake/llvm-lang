@@ -47,7 +47,7 @@ class Scanner {
     /// @brief Scan an identifier
     void identifier();
     /// @brief Scan a string
-    void string();
+    // void string();
     /// @brief Scan a number
     void number();
 

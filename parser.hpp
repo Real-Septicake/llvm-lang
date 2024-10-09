@@ -54,6 +54,7 @@ class Parser {
     /// @return True if the next Token is of any of the specified types, false
     /// otherwise or if the scanner has reached the end
     bool match(std::initializer_list<TokenKind> types);
+    std::pair<value::ValueType, Token *> consume_type();
     /// @brief Attempt to pop a Token of the specified type, and produce an
     /// error otherwise
     /// @param type The type of Token to attempt to pop
@@ -74,10 +75,6 @@ class Parser {
     /// tokens
     /// @return The parsed statement, or `nullptr` if an error occurred
     Stmt *declaration();
-    /// @brief Parses a class declaration from the current position in the
-    /// supplied tokens
-    /// @return The parsed class declaration
-    AST::Class *classDeclaration();
     /// @brief Parses a function declaration of the specified type from the
     /// current position in the supplied tokens
     /// @param kind The kind of function to parse

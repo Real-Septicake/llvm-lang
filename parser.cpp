@@ -5,6 +5,13 @@
 
 #include <string>
 #include <vector>
+#include <unordered_map>
+#include <iostream>
+
+static std::unordered_map<TokenKind, value::ValueType> type_map = {
+    {TokenKind::TOKEN_BOOL, value::ValueType::VAL_BOOL},
+    {TokenKind::TOKEN_NUM, value::ValueType::VAL_NUM}
+};
 
 std::vector<Stmt *> parser::Parser::parse() {
     std::vector<Stmt *> statements = std::vector<Stmt *>();
@@ -23,7 +30,6 @@ void parser::Parser::synchronize() {
             return;
 
         switch (peek()->type) {
-        case TokenKind::TOKEN_CLASS:
         case TokenKind::TOKEN_FN:
         case TokenKind::TOKEN_VAR:
         case TokenKind::TOKEN_FOR:
@@ -76,6 +82,18 @@ Token *parser::Parser::consume(TokenKind type, std::string message) {
     throw error(peek(), message);
 }
 
+std::pair<value::ValueType, Token *> parser::Parser::consume_type() {
+    if(match({TOKEN_BOOL, TOKEN_NUM})) {
+        Token *tok = previous();
+        auto val_type = type_map.find(tok->type);
+        if(val_type != type_map.end()) {
+            return std::make_pair(val_type->second, tok);
+        }
+    }
+
+    throw error(peek(), "Expect type name.");
+}
+
 bool parser::Parser::isAtEnd() {
     return peek()->type == TokenKind::TOKEN_EOF;
 }
@@ -87,8 +105,6 @@ parser::ParseError parser::Parser::error(Token *token, std::string message) {
 
 Stmt *parser::Parser::declaration() {
     try {
-        if (match({TOKEN_CLASS}))
-            return classDeclaration();
         if (match({TOKEN_FN}))
             return function("function");
         if (match({TOKEN_VAR}))
@@ -99,27 +115,6 @@ Stmt *parser::Parser::declaration() {
         synchronize();
         return nullptr;
     }
-}
-
-AST::Class *parser::Parser::classDeclaration() {
-    Token *name = consume(TOKEN_IDENTIFIER, "Expect class name.");
-
-    AST::Variable *superclass = nullptr;
-    if (match({TOKEN_LESS})) {
-        Token *name = consume(TOKEN_IDENTIFIER, "Expect superclass name.");
-        superclass  = new AST::Variable(name);
-    }
-
-    consume(TOKEN_LEFT_BRACE, "Expect '{' before class body.");
-
-    std::vector<AST::Function *> methods = std::vector<AST::Function *>();
-    while (!check(TOKEN_RIGHT_BRACE) && !isAtEnd()) {
-        methods.push_back(function("method"));
-    }
-
-    consume(TOKEN_RIGHT_BRACE, "Expect '}' after class body.");
-
-    return new AST::Class(name, superclass, methods);
 }
 
 AST::Function *parser::Parser::function(std::string kind) {
@@ -146,6 +141,8 @@ AST::Function *parser::Parser::function(std::string kind) {
 
 AST::Var *parser::Parser::varDeclaration() {
     Token *name = consume(TOKEN_IDENTIFIER, "Expect variable name.");
+    consume(TOKEN_COLON, "Expect ':' after variable name.");
+    auto type = consume_type();
 
     Expr *initializer = nullptr;
     if (match({TOKEN_EQUAL})) {
@@ -153,7 +150,7 @@ AST::Var *parser::Parser::varDeclaration() {
     }
 
     consume(TOKEN_SEMICOLON, "Expect ';' after variable declaration.");
-    return new AST::Var(name, initializer);
+    return new AST::Var(name, type, initializer);
 }
 
 Stmt *parser::Parser::statement() {
@@ -423,14 +420,8 @@ Expr *parser::Parser::primary() {
         return new AST::Literal(value::boolVal(true));
     if (match({TOKEN_FALSE}))
         return new AST::Literal(value::boolVal(false));
-    if (match({TOKEN_NIL}))
-        return new AST::Literal(value::nilVal());
     if (match({TOKEN_NUMBER}))
         return new AST::Literal(value::numVal(stod(previous()->text)));
-    if (match({TOKEN_STRING})) {
-        std::string val = previous()->text;
-        return new AST::Literal(value::strVal(&(previous()->text.substr(1, val.size() - 2))));
-    }
 
     if (match({TOKEN_SUPER})) {
         Token *keyword = previous();
@@ -447,6 +438,7 @@ Expr *parser::Parser::primary() {
 
     if (match({TOKEN_IDENTIFIER})) {
         Token *name = previous();
+        consume(TOKEN_COLON, "Expect ':' after variable name.");
         return new AST::Variable(name);
     }
 
