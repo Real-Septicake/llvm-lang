@@ -176,73 +176,97 @@ class StmtVisitor {
   public:
     /// @brief Visit the AST::Block node
     /// @param stmt The node to visit
-    virtual void visitBlockStmt(AST::Block *stmt) = 0;
+    virtual void visitBlockStmt(AST::Block *stmt) {
+        return;
+    }
     virtual llvm::Value *genBlockStmt(AST::Block *stmt) {
         return nullptr;
     }
     /// @brief Visit the AST::Expression node
     /// @param stmt The node to visit
-    virtual void visitExpressionStmt(AST::Expression *stmt) = 0;
+    virtual void visitExpressionStmt(AST::Expression *stmt) {
+        return;
+    }
     virtual llvm::Value *genExpressionStmt(AST::Expression *stmt) {
         return nullptr;
     }
     /// @brief Visit the AST::Function node
     /// @param stmt The node to visit
-    virtual void visitFunctionStmt(AST::Function *stmt) = 0;
+    virtual void visitFunctionStmt(AST::Function *stmt) {
+        return;
+    }
     virtual llvm::Value *genFunctionStmt(AST::Function *stmt) {
         return nullptr;
     }
     /// @brief Visit the AST::Class node
     /// @param stmt The node to visit
-    virtual void visitClassStmt(AST::Class *stmt) = 0;
+    virtual void visitClassStmt(AST::Class *stmt) {
+        return;
+    }
     virtual llvm::Value *genClassStmt(AST::Class *stmt) {
         return nullptr;
     }
     /// @brief Visit the AST::If node
     /// @param stmt The node to visit
-    virtual void visitIfStmt(AST::If *stmt) = 0;
+    virtual void visitIfStmt(AST::If *stmt) {
+        return;
+    }
     virtual llvm::Value *genIfStmt(AST::If *stmt) {
         return nullptr;
     }
     /// @brief Visit the AST::Print node
     /// @param stmt The node to visit
-    virtual void visitPrintStmt(AST::Print *stmt) = 0;
+    virtual void visitPrintStmt(AST::Print *stmt) {
+        return;
+    }
     virtual llvm::Value *genPrintStmt(AST::Print *stmt) {
         return nullptr;
     }
     /// @brief Visit the AST::Return node
     /// @param stmt The node to visit
-    virtual void visitReturnStmt(AST::Return *stmt) = 0;
+    virtual void visitReturnStmt(AST::Return *stmt) {
+        return;
+    }
     virtual llvm::Value *genReturnStmt(AST::Return *stmt) {
         return nullptr;
     }
     /// @brief Visit the AST::Var node
     /// @param stmt The node to visit
-    virtual void visitVarStmt(AST::Var *stmt) = 0;
+    virtual void visitVarStmt(AST::Var *stmt) {
+        return;
+    }
     virtual llvm::Value *genVarStmt(AST::Var *stmt) {
         return nullptr;
     }
     /// @brief Visit the AST::While node
     /// @param stmt The node to visit
-    virtual void visitWhileStmt(AST::While *stmt) = 0;
+    virtual void visitWhileStmt(AST::While *stmt) {
+        return;
+    }
     virtual llvm::Value *genWhileStmt(AST::While *stmt) {
         return nullptr;
     }
     /// @brief Visit the AST::For node
     /// @param stmt The node to visit
-    virtual void visitForStmt(AST::For *stmt) = 0;
+    virtual void visitForStmt(AST::For *stmt) {
+        return;
+    }
     virtual llvm::Value *genForStmt(AST::For *stmt) {
         return nullptr;
     }
     /// @brief Visit the AST::Break node
     /// @param stmt The node to visit
-    virtual void visitBreakStmt(AST::Break *stmt) = 0;
+    virtual void visitBreakStmt(AST::Break *stmt) {
+        return;
+    }
     virtual llvm::Value *genBreakStmt(AST::Break *stmt) {
         return nullptr;
     }
     /// @brief Visit the AST::Continue node
     /// @param stmt The node to visit
-    virtual void visitContinueStmt(AST::Continue *stmt) = 0;
+    virtual void visitContinueStmt(AST::Continue *stmt) {
+        return;
+    }
     virtual llvm::Value *genContinueStmt(AST::Continue *stmt) {
         return nullptr;
     }

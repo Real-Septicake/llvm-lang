@@ -169,73 +169,97 @@ class ExprVisitor {
   public:
     /// @brief Visit the AST::Assign node
     /// @param expr The node to visit
-    virtual void visitAssignExpr(AST::Assign *expr) = 0;
+    virtual void visitAssignExpr(AST::Assign *expr) {
+        return;
+    }
     virtual llvm::Value *genAssignExpr(AST::Assign *expr) {
         return nullptr;
     }
     /// @brief Visit the AST::Binary node
     /// @param expr The node to visit
-    virtual void visitBinaryExpr(AST::Binary *expr) = 0;
+    virtual void visitBinaryExpr(AST::Binary *expr) {
+        return;
+    }
     virtual llvm::Value *genBinaryExpr(AST::Binary *expr) {
         return nullptr;
     }
     /// @brief Visit the AST::Call node
     /// @param expr The node to visit
-    virtual void visitCallExpr(AST::Call *expr) = 0;
+    virtual void visitCallExpr(AST::Call *expr) {
+        return;
+    }
     virtual llvm::Value *genCallExpr(AST::Call *expr) {
         return nullptr;
     }
     /// @brief Visit the AST::Get node
     /// @param expr The node to visit
-    virtual void visitGetExpr(AST::Get *expr) = 0;
+    virtual void visitGetExpr(AST::Get *expr) {
+        return;
+    }
     virtual llvm::Value *genGetExpr(AST::Get *expr) {
         return nullptr;
     }
     /// @brief Visit the AST::Grouping node
     /// @param expr The node to visit
-    virtual void visitGroupingExpr(AST::Grouping *expr) = 0;
+    virtual void visitGroupingExpr(AST::Grouping *expr) {
+        return;
+    }
     virtual llvm::Value *genGroupingExpr(AST::Grouping *expr) {
         return nullptr;
     }
     /// @brief Visit the AST::Logical node
     /// @param expr The node to visit
-    virtual void visitLogicalExpr(AST::Logical *expr) = 0;
+    virtual void visitLogicalExpr(AST::Logical *expr) {
+        return;
+    }
     virtual llvm::Value *genLogicalExpr(AST::Logical *expr) {
         return nullptr;
     }
     /// @brief Visit the AST::Set node
     /// @param expr The node to visit
-    virtual void visitSetExpr(AST::Set *expr) = 0;
+    virtual void visitSetExpr(AST::Set *expr) {
+        return;
+    }
     virtual llvm::Value *genSetExpr(AST::Set *expr) {
         return nullptr;
     }
     /// @brief Visit the AST::Super node
     /// @param expr The node to visit
-    virtual void visitSuperExpr(AST::Super *expr) = 0;
+    virtual void visitSuperExpr(AST::Super *expr) {
+        return;
+    }
     virtual llvm::Value *genSuperExpr(AST::Super *expr) {
         return nullptr;
     }
     /// @brief Visit the AST::This node
     /// @param expr The node to visit
-    virtual void visitThisExpr(AST::This *expr) = 0;
+    virtual void visitThisExpr(AST::This *expr) {
+        return;
+    }
     virtual llvm::Value *genThisExpr(AST::This *expr) {
         return nullptr;
     }
     /// @brief Visit the AST::Unary node
     /// @param expr The node to visit
-    virtual void visitUnaryExpr(AST::Unary *expr) = 0;
+    virtual void visitUnaryExpr(AST::Unary *expr) {
+        return;
+    }
     virtual llvm::Value *genUnaryExpr(AST::Unary *expr) {
         return nullptr;
     }
     /// @brief Visit the AST::Variable node
     /// @param expr The node to visit
-    virtual void visitVariableExpr(AST::Variable *expr) = 0;
+    virtual void visitVariableExpr(AST::Variable *expr) {
+        return;
+    }
     virtual llvm::Value *genVariableExpr(AST::Variable *expr) {
         return nullptr;
     }
     /// @brief Visit the AST::Literal node
     /// @param expr The node to visit
-    virtual void visitLiteralExpr(AST::Literal *expr) = 0;
+    virtual void visitLiteralExpr(AST::Literal *expr) {
+        return;
+    }
     virtual llvm::Value *genLiteralExpr(AST::Literal *expr) {
         return nullptr;
     }

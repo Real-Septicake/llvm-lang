@@ -65,7 +65,7 @@ def defineAst(baseName: str, longName: str, types: list[tuple[str, str]], includ
     for type in types:
         f.write("/// @brief Visit the AST::" + type[0].strip() + " node\n")
         f.write("/// @param " + baseName.lower() + " The node to visit\n")
-        f.write("virtual void visit" + type[0].strip() + baseName + "(AST::" + type[0].strip() + "* " + baseName.lower() + ") = 0;\n")
+        f.write("virtual void visit" + type[0].strip() + baseName + "(AST::" + type[0].strip() + "* " + baseName.lower() + ") { return; }\n")
         f.write("virtual llvm::Value *gen" + type[0].strip() + baseName + "(AST::" + type[0].strip() + "* " + baseName.lower() + ") { return nullptr; }\n")
     f.write("}; // Visitor\n\n")
 
