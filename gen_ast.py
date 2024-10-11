@@ -16,6 +16,7 @@ def defineAst(baseName: str, longName: str, types: list[tuple[str, str]], includ
     f.write("#ifndef " + baseName.upper() + "_HH\n")
     f.write("#define " + baseName.upper() + "_HH\n\n")
 
+    f.write("#include <llvm/IR/Value.h>\n")
     f.write("#include \"token.hpp\"\n\n")
 
     for include in includes:
@@ -41,6 +42,7 @@ def defineAst(baseName: str, longName: str, types: list[tuple[str, str]], includ
     f.write("/// @brief Accept an AST::" + baseName + "Visitor\n")
     f.write("/// @param visitor The visitor to accept\n")
     f.write("virtual void accept(" + baseName + "Visitor *visitor) = 0;\n")
+    f.write("virtual llvm::Value *codegen(" + baseName + "Visitor *visitor) = 0;\n")
     f.write("/// @brief Create an AST::" + baseName + " with the specified type\n")
     f.write("/// @param type The type of this AST::" + baseName + " node\n")
     f.write(baseName + "(" + baseName.strip() + "Type type) : type(type) {}")
@@ -54,6 +56,7 @@ def defineAst(baseName: str, longName: str, types: list[tuple[str, str]], includ
             f.write(field.strip() + ";\n")
         f.write(type[0].strip() + "(" + type[1].strip() + ");\n")
         f.write("void accept(" + baseName + "Visitor* visitor) override;\n")
+        f.write("llvm::Value *codegen(" + baseName + "Visitor* visitor) override;\n")
         f.write("};\n\n")
 
     f.write("/// @brief The visitor for the AST::" + baseName + " class\n")
@@ -63,6 +66,7 @@ def defineAst(baseName: str, longName: str, types: list[tuple[str, str]], includ
         f.write("/// @brief Visit the AST::" + type[0].strip() + " node\n")
         f.write("/// @param " + baseName.lower() + " The node to visit\n")
         f.write("virtual void visit" + type[0].strip() + baseName + "(AST::" + type[0].strip() + "* " + baseName.lower() + ") = 0;\n")
+        f.write("virtual llvm::Value *gen" + type[0].strip() + baseName + "(AST::" + type[0].strip() + "* " + baseName.lower() + ") { return nullptr; }\n")
     f.write("}; // Visitor\n\n")
 
     f.write("} // namespace AST\n")
@@ -82,8 +86,11 @@ def defineAst(baseName: str, longName: str, types: list[tuple[str, str]], includ
         for field in type[1].strip().split(","):
             f.write("this->" + field.split()[1] + " = " + field.split()[1] + ";\n")
         f.write("}\n")
-        f.write("void AST::" + type[0].strip() + "::" + "accept(" + baseName + "Visitor* visitor) {\n")
+        f.write("void AST::" + type[0].strip() + "::accept(" + baseName + "Visitor* visitor) {\n")
         f.write("visitor->visit" + type[0].strip() + baseName + "(this);\n")
+        f.write("}\n")
+        f.write("llvm::Value *AST::" + type[0].strip() + "::codegen(" + baseName + "Visitor* visitor) {\n")
+        f.write("return visitor->gen" + type[0].strip() + baseName + "(this);\n")
         f.write("}\n\n")
 
     f.close()

@@ -6,12 +6,18 @@ AST::Block::Block(std::vector<Stmt *> statements) : Stmt(StmtType::BlockType) {
 void AST::Block::accept(StmtVisitor *visitor) {
     visitor->visitBlockStmt(this);
 }
+llvm::Value *AST::Block::codegen(StmtVisitor *visitor) {
+    return visitor->genBlockStmt(this);
+}
 
 AST::Expression::Expression(Expr *expression) : Stmt(StmtType::ExpressionType) {
     this->expression = expression;
 }
 void AST::Expression::accept(StmtVisitor *visitor) {
     visitor->visitExpressionStmt(this);
+}
+llvm::Value *AST::Expression::codegen(StmtVisitor *visitor) {
+    return visitor->genExpressionStmt(this);
 }
 
 AST::Function::Function(Token *name, std::vector<Token *> params,
@@ -28,6 +34,9 @@ AST::Function::Function(Token *name, std::vector<Token *> params,
 void AST::Function::accept(StmtVisitor *visitor) {
     visitor->visitFunctionStmt(this);
 }
+llvm::Value *AST::Function::codegen(StmtVisitor *visitor) {
+    return visitor->genFunctionStmt(this);
+}
 
 AST::Class::Class(Token *name, AST::Variable *superclass,
                   std::vector<AST::Function *> methods)
@@ -39,6 +48,9 @@ AST::Class::Class(Token *name, AST::Variable *superclass,
 void AST::Class::accept(StmtVisitor *visitor) {
     visitor->visitClassStmt(this);
 }
+llvm::Value *AST::Class::codegen(StmtVisitor *visitor) {
+    return visitor->genClassStmt(this);
+}
 
 AST::If::If(Expr *condition, Stmt *thenBranch, Stmt *elseBranch)
     : Stmt(StmtType::IfType) {
@@ -49,12 +61,18 @@ AST::If::If(Expr *condition, Stmt *thenBranch, Stmt *elseBranch)
 void AST::If::accept(StmtVisitor *visitor) {
     visitor->visitIfStmt(this);
 }
+llvm::Value *AST::If::codegen(StmtVisitor *visitor) {
+    return visitor->genIfStmt(this);
+}
 
 AST::Print::Print(Expr *expression) : Stmt(StmtType::PrintType) {
     this->expression = expression;
 }
 void AST::Print::accept(StmtVisitor *visitor) {
     visitor->visitPrintStmt(this);
+}
+llvm::Value *AST::Print::codegen(StmtVisitor *visitor) {
+    return visitor->genPrintStmt(this);
 }
 
 AST::Return::Return(Token *keyword, Expr *value) : Stmt(StmtType::ReturnType) {
@@ -63,6 +81,9 @@ AST::Return::Return(Token *keyword, Expr *value) : Stmt(StmtType::ReturnType) {
 }
 void AST::Return::accept(StmtVisitor *visitor) {
     visitor->visitReturnStmt(this);
+}
+llvm::Value *AST::Return::codegen(StmtVisitor *visitor) {
+    return visitor->genReturnStmt(this);
 }
 
 AST::Var::Var(Token *name, std::pair<value::ValueType, Token *> type,
@@ -75,6 +96,9 @@ AST::Var::Var(Token *name, std::pair<value::ValueType, Token *> type,
 void AST::Var::accept(StmtVisitor *visitor) {
     visitor->visitVarStmt(this);
 }
+llvm::Value *AST::Var::codegen(StmtVisitor *visitor) {
+    return visitor->genVarStmt(this);
+}
 
 AST::While::While(Expr *condition, Stmt *body) : Stmt(StmtType::WhileType) {
     this->condition = condition;
@@ -82,6 +106,9 @@ AST::While::While(Expr *condition, Stmt *body) : Stmt(StmtType::WhileType) {
 }
 void AST::While::accept(StmtVisitor *visitor) {
     visitor->visitWhileStmt(this);
+}
+llvm::Value *AST::While::codegen(StmtVisitor *visitor) {
+    return visitor->genWhileStmt(this);
 }
 
 AST::For::For(Stmt *initializer, Expr *condition, Expr *increment, Stmt *body)
@@ -94,6 +121,9 @@ AST::For::For(Stmt *initializer, Expr *condition, Expr *increment, Stmt *body)
 void AST::For::accept(StmtVisitor *visitor) {
     visitor->visitForStmt(this);
 }
+llvm::Value *AST::For::codegen(StmtVisitor *visitor) {
+    return visitor->genForStmt(this);
+}
 
 AST::Break::Break(Token *keyword) : Stmt(StmtType::BreakType) {
     this->keyword = keyword;
@@ -101,10 +131,16 @@ AST::Break::Break(Token *keyword) : Stmt(StmtType::BreakType) {
 void AST::Break::accept(StmtVisitor *visitor) {
     visitor->visitBreakStmt(this);
 }
+llvm::Value *AST::Break::codegen(StmtVisitor *visitor) {
+    return visitor->genBreakStmt(this);
+}
 
 AST::Continue::Continue(Token *keyword) : Stmt(StmtType::ContinueType) {
     this->keyword = keyword;
 }
 void AST::Continue::accept(StmtVisitor *visitor) {
     visitor->visitContinueStmt(this);
+}
+llvm::Value *AST::Continue::codegen(StmtVisitor *visitor) {
+    return visitor->genContinueStmt(this);
 }

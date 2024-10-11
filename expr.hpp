@@ -4,6 +4,7 @@
 #include "token.hpp"
 #include "value.hpp"
 
+#include <llvm/IR/Value.h>
 #include <utility>
 #include <vector>
 /// @brief A namespace containing members used for the creation and usage of the
@@ -36,7 +37,8 @@ class Expr {
     ExprType type;
     /// @brief Accept an AST::ExprVisitor
     /// @param visitor The visitor to accept
-    virtual void accept(ExprVisitor *visitor) = 0;
+    virtual void accept(ExprVisitor *visitor)          = 0;
+    virtual llvm::Value *codegen(ExprVisitor *visitor) = 0;
     /// @brief Create an AST::Expr with the specified type
     /// @param type The type of this AST::Expr node
     Expr(ExprType type) : type(type) {}
@@ -49,6 +51,7 @@ class Assign : public Expr {
     Expr *value;
     Assign(Token *name, Expr *value);
     void accept(ExprVisitor *visitor) override;
+    llvm::Value *codegen(ExprVisitor *visitor) override;
 };
 
 /// @brief The node for a binary expression
@@ -59,6 +62,7 @@ class Binary : public Expr {
     Expr *right;
     Binary(Expr *left, Token *op, Expr *right);
     void accept(ExprVisitor *visitor) override;
+    llvm::Value *codegen(ExprVisitor *visitor) override;
 };
 
 /// @brief The node for a call expression
@@ -69,6 +73,7 @@ class Call : public Expr {
     std::vector<Expr *> args;
     Call(Expr *callee, Token *paren, std::vector<Expr *> args);
     void accept(ExprVisitor *visitor) override;
+    llvm::Value *codegen(ExprVisitor *visitor) override;
 };
 
 /// @brief The node for a get expression
@@ -78,6 +83,7 @@ class Get : public Expr {
     Token *name;
     Get(Expr *object, Token *name);
     void accept(ExprVisitor *visitor) override;
+    llvm::Value *codegen(ExprVisitor *visitor) override;
 };
 
 /// @brief The node for a grouping expression
@@ -86,6 +92,7 @@ class Grouping : public Expr {
     Expr *expression;
     Grouping(Expr *expression);
     void accept(ExprVisitor *visitor) override;
+    llvm::Value *codegen(ExprVisitor *visitor) override;
 };
 
 /// @brief The node for a logical expression
@@ -96,6 +103,7 @@ class Logical : public Expr {
     Expr *right;
     Logical(Expr *left, Token *op, Expr *right);
     void accept(ExprVisitor *visitor) override;
+    llvm::Value *codegen(ExprVisitor *visitor) override;
 };
 
 /// @brief The node for a set expression
@@ -106,6 +114,7 @@ class Set : public Expr {
     Expr *value;
     Set(Expr *object, Token *name, Expr *value);
     void accept(ExprVisitor *visitor) override;
+    llvm::Value *codegen(ExprVisitor *visitor) override;
 };
 
 /// @brief The node for a super expression
@@ -115,6 +124,7 @@ class Super : public Expr {
     Token *method;
     Super(Token *keyword, Token *method);
     void accept(ExprVisitor *visitor) override;
+    llvm::Value *codegen(ExprVisitor *visitor) override;
 };
 
 /// @brief The node for a this expression
@@ -123,6 +133,7 @@ class This : public Expr {
     Token *keyword;
     This(Token *keyword);
     void accept(ExprVisitor *visitor) override;
+    llvm::Value *codegen(ExprVisitor *visitor) override;
 };
 
 /// @brief The node for an unary expression
@@ -132,6 +143,7 @@ class Unary : public Expr {
     Expr *right;
     Unary(Token *op, Expr *right);
     void accept(ExprVisitor *visitor) override;
+    llvm::Value *codegen(ExprVisitor *visitor) override;
 };
 
 /// @brief The node for a variable expression
@@ -140,6 +152,7 @@ class Variable : public Expr {
     Token *name;
     Variable(Token *name);
     void accept(ExprVisitor *visitor) override;
+    llvm::Value *codegen(ExprVisitor *visitor) override;
 };
 
 /// @brief The node for a literal expression
@@ -148,6 +161,7 @@ class Literal : public Expr {
     value::Value value;
     Literal(value::Value value);
     void accept(ExprVisitor *visitor) override;
+    llvm::Value *codegen(ExprVisitor *visitor) override;
 };
 
 /// @brief The visitor for the AST::Expr class
@@ -156,39 +170,75 @@ class ExprVisitor {
     /// @brief Visit the AST::Assign node
     /// @param expr The node to visit
     virtual void visitAssignExpr(AST::Assign *expr) = 0;
+    virtual llvm::Value *genAssignExpr(AST::Assign *expr) {
+        return nullptr;
+    }
     /// @brief Visit the AST::Binary node
     /// @param expr The node to visit
     virtual void visitBinaryExpr(AST::Binary *expr) = 0;
+    virtual llvm::Value *genBinaryExpr(AST::Binary *expr) {
+        return nullptr;
+    }
     /// @brief Visit the AST::Call node
     /// @param expr The node to visit
     virtual void visitCallExpr(AST::Call *expr) = 0;
+    virtual llvm::Value *genCallExpr(AST::Call *expr) {
+        return nullptr;
+    }
     /// @brief Visit the AST::Get node
     /// @param expr The node to visit
     virtual void visitGetExpr(AST::Get *expr) = 0;
+    virtual llvm::Value *genGetExpr(AST::Get *expr) {
+        return nullptr;
+    }
     /// @brief Visit the AST::Grouping node
     /// @param expr The node to visit
     virtual void visitGroupingExpr(AST::Grouping *expr) = 0;
+    virtual llvm::Value *genGroupingExpr(AST::Grouping *expr) {
+        return nullptr;
+    }
     /// @brief Visit the AST::Logical node
     /// @param expr The node to visit
     virtual void visitLogicalExpr(AST::Logical *expr) = 0;
+    virtual llvm::Value *genLogicalExpr(AST::Logical *expr) {
+        return nullptr;
+    }
     /// @brief Visit the AST::Set node
     /// @param expr The node to visit
     virtual void visitSetExpr(AST::Set *expr) = 0;
+    virtual llvm::Value *genSetExpr(AST::Set *expr) {
+        return nullptr;
+    }
     /// @brief Visit the AST::Super node
     /// @param expr The node to visit
     virtual void visitSuperExpr(AST::Super *expr) = 0;
+    virtual llvm::Value *genSuperExpr(AST::Super *expr) {
+        return nullptr;
+    }
     /// @brief Visit the AST::This node
     /// @param expr The node to visit
     virtual void visitThisExpr(AST::This *expr) = 0;
+    virtual llvm::Value *genThisExpr(AST::This *expr) {
+        return nullptr;
+    }
     /// @brief Visit the AST::Unary node
     /// @param expr The node to visit
     virtual void visitUnaryExpr(AST::Unary *expr) = 0;
+    virtual llvm::Value *genUnaryExpr(AST::Unary *expr) {
+        return nullptr;
+    }
     /// @brief Visit the AST::Variable node
     /// @param expr The node to visit
     virtual void visitVariableExpr(AST::Variable *expr) = 0;
+    virtual llvm::Value *genVariableExpr(AST::Variable *expr) {
+        return nullptr;
+    }
     /// @brief Visit the AST::Literal node
     /// @param expr The node to visit
     virtual void visitLiteralExpr(AST::Literal *expr) = 0;
+    virtual llvm::Value *genLiteralExpr(AST::Literal *expr) {
+        return nullptr;
+    }
 }; // Visitor
 
 } // namespace AST

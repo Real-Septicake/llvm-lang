@@ -163,7 +163,8 @@ void ASTPrinter::visitReturnStmt(AST::Return *stmt) {
 }
 
 void ASTPrinter::visitVarStmt(AST::Var *stmt) {
-    std::cout << "(var " << stmt->name->text << " : " << stmt->type.second->text;
+    std::cout << "(var " << stmt->name->text << " : "
+              << stmt->type.second->text;
     if (stmt->initializer != nullptr) {
         std::cout << " = ";
         stmt->initializer->accept(this);
