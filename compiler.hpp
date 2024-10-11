@@ -4,36 +4,49 @@
 #include "expr.hpp"
 #include "stmt.hpp"
 
+#include <llvm/ADT/APFloat.h>
+#include <llvm/IR/Function.h>
+#include <llvm/IR/IRBuilder.h>
+#include <llvm/IR/LLVMContext.h>
+#include <llvm/IR/Module.h>
+#include <llvm/IR/Type.h>
 #include <llvm/IR/Value.h>
-
-using namespace llvm;
+#include <map>
 
 class Compiler : public AST::ExprVisitor, AST::StmtVisitor {
   public:
-    virtual Value *genAssignExpr(AST::Assign *expr) override;
-    virtual Value *genBinaryExpr(AST::Binary *expr) override;
-    virtual Value *genCallExpr(AST::Call *expr) override;
-    virtual Value *genGetExpr(AST::Get *expr) override;
-    virtual Value *genGroupingExpr(AST::Grouping *expr) override;
-    virtual Value *genLogicalExpr(AST::Logical *expr) override;
-    virtual Value *genSetExpr(AST::Set *expr) override;
-    virtual Value *genSuperExpr(AST::Super *expr) override;
-    virtual Value *genThisExpr(AST::This *expr) override;
-    virtual Value *genUnaryExpr(AST::Unary *expr) override;
-    virtual Value *genVariableExpr(AST::Variable *expr) override;
-    virtual Value *genLiteralExpr(AST::Literal *expr) override;
-    virtual Value *genBlockStmt(AST::Block *stmt) override;
-    virtual Value *genExpressionStmt(AST::Expression *stmt) override;
-    virtual Value *genFunctionStmt(AST::Function *stmt) override;
-    virtual Value *genClassStmt(AST::Class *stmt) override;
-    virtual Value *genIfStmt(AST::If *stmt) override;
-    virtual Value *genPrintStmt(AST::Print *stmt) override;
-    virtual Value *genReturnStmt(AST::Return *stmt) override;
-    virtual Value *genVarStmt(AST::Var *stmt) override;
-    virtual Value *genWhileStmt(AST::While *stmt) override;
-    virtual Value *genForStmt(AST::For *stmt) override;
-    virtual Value *genBreakStmt(AST::Break *stmt) override;
-    virtual Value *genContinueStmt(AST::Continue *stmt) override;
+    virtual llvm::Value *genAssignExpr(AST::Assign *expr) override;
+    virtual llvm::Value *genBinaryExpr(AST::Binary *expr) override;
+    virtual llvm::Value *genCallExpr(AST::Call *expr) override;
+    virtual llvm::Value *genGetExpr(AST::Get *expr) override;
+    virtual llvm::Value *genGroupingExpr(AST::Grouping *expr) override;
+    virtual llvm::Value *genLogicalExpr(AST::Logical *expr) override;
+    virtual llvm::Value *genSetExpr(AST::Set *expr) override;
+    virtual llvm::Value *genSuperExpr(AST::Super *expr) override;
+    virtual llvm::Value *genThisExpr(AST::This *expr) override;
+    virtual llvm::Value *genUnaryExpr(AST::Unary *expr) override;
+    virtual llvm::Value *genVariableExpr(AST::Variable *expr) override;
+    virtual llvm::Value *genLiteralExpr(AST::Literal *expr) override;
+    virtual llvm::Value *genBlockStmt(AST::Block *stmt) override;
+    virtual llvm::Value *genExpressionStmt(AST::Expression *stmt) override;
+    virtual llvm::Value *genFunctionStmt(AST::Function *stmt) override;
+    virtual llvm::Value *genClassStmt(AST::Class *stmt) override;
+    virtual llvm::Value *genIfStmt(AST::If *stmt) override;
+    virtual llvm::Value *genPrintStmt(AST::Print *stmt) override;
+    virtual llvm::Value *genReturnStmt(AST::Return *stmt) override;
+    virtual llvm::Value *genVarStmt(AST::Var *stmt) override;
+    virtual llvm::Value *genWhileStmt(AST::While *stmt) override;
+    virtual llvm::Value *genForStmt(AST::For *stmt) override;
+    virtual llvm::Value *genBreakStmt(AST::Break *stmt) override;
+    virtual llvm::Value *genContinueStmt(AST::Continue *stmt) override;
+    Compiler();
+
+  private:
+    llvm::LLVMContext *context;
+    llvm::Module *module;
+    llvm::IRBuilder<> *builder;
+    std::map<std::string, llvm::Value *> named_values;
+    llvm::Value *toBool(llvm::Value *val);
 };
 
 #endif
