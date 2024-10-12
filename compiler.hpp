@@ -13,6 +13,17 @@
 #include <llvm/IR/Value.h>
 #include <map>
 
+typedef std::pair<value::ValueType, Token *> TypePair;
+
+namespace compiler {
+typedef llvm::Type *(*ToType)(llvm::LLVMContext &context);
+
+static std::map<value::ValueType, ToType> value_to_type = {
+    {value::ValueType::VAL_BOOL, llvm::Type::getFloatTy           },
+    {value::ValueType::VAL_NUM,
+     (llvm::Type * (*)(llvm::LLVMContext &)) llvm::Type::getInt1Ty}
+};
+
 class Compiler : public AST::ExprVisitor, AST::StmtVisitor {
   public:
     virtual llvm::Value *genAssignExpr(AST::Assign *expr) override;
@@ -48,5 +59,6 @@ class Compiler : public AST::ExprVisitor, AST::StmtVisitor {
     std::map<std::string, llvm::Value *> named_values;
     llvm::Value *toBool(llvm::Value *val);
 };
+} // namespace compiler
 
 #endif
