@@ -289,7 +289,7 @@ compiler::Compiler::Compiler() {
 
     llvm::Function *top_level = llvm::Function::Create(
         llvm::FunctionType::get(llvm::Type::getVoidTy(*context),
-                                llvm::Type::getVoidTy(*context)),
+                                llvm::Type::getVoidTy(*context), false),
         llvm::Function::ExternalLinkage, "__main", *module);
 
     llvm::BasicBlock *main =
