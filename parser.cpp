@@ -244,9 +244,10 @@ AST::If *parser::Parser::ifStatement() {
 }
 
 AST::Print *parser::Parser::printStatement() {
-    Expr *value = expression();
+    Token *keyword = previous();
+    Expr *value    = expression();
     consume(TOKEN_SEMICOLON, "Expect ';' after value.");
-    return new AST::Print(value);
+    return new AST::Print(keyword, value);
 }
 
 AST::Return *parser::Parser::returnStatement() {

@@ -1,3 +1,7 @@
-fn test() { return 5.4 + 8.2; }
+fn test(a : num) : bool {
+    return a + 5.0;
+}
 
-test();
+var test2 : num = test(2.0) + 2.0;
+
+print test2;

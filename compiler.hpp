@@ -23,7 +23,7 @@ static ToType value_to_type(value::ValueType kind) {
     case value::ValueType::VAL_BOOL:
         return (llvm::Type * (*)(llvm::LLVMContext &)) llvm::Type::getInt1Ty;
     case value::ValueType::VAL_NUM:
-        return llvm::Type::getFloatTy;
+        return llvm::Type::getDoubleTy;
     case value::ValueType::VAL_VOID:
         return llvm::Type::getVoidTy;
     default:
@@ -33,6 +33,7 @@ static ToType value_to_type(value::ValueType kind) {
 
 class Compiler : public AST::ExprVisitor, public AST::StmtVisitor {
   public:
+    bool errored = false;
     virtual llvm::Value *genAssignExpr(AST::Assign *expr) override;
     virtual llvm::Value *genBinaryExpr(AST::Binary *expr) override;
     virtual llvm::Value *genCallExpr(AST::Call *expr) override;
@@ -59,16 +60,20 @@ class Compiler : public AST::ExprVisitor, public AST::StmtVisitor {
     virtual llvm::Value *genContinueStmt(AST::Continue *stmt) override;
     Compiler();
     void print_code();
+    void verify();
 
   private:
     llvm::LLVMContext *context;
     llvm::Module *module;
     llvm::IRBuilder<> *builder;
-    std::map<std::string, llvm::Value *> named_values;
+    std::vector<std::map<std::string, llvm::AllocaInst *>> named_values = {
+        std::map<std::string, llvm::AllocaInst *>()};
     llvm::BasicBlock *break_block = nullptr;
     llvm::BasicBlock *cont_block  = nullptr;
     llvm::Value *toBool(llvm::Value *val);
     llvm::Value *toFloat(llvm::Value *val);
+    void begin_scope();
+    void end_scope();
 };
 } // namespace compiler
 

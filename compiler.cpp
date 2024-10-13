@@ -68,13 +68,30 @@ llvm::Value *compiler::Compiler::genCallExpr(AST::Call *expr) {
         break;
     default:
         std::cerr << "Unsupported, don't do that." << std::endl;
+        errored = true;
         return nullptr;
     }
 
     llvm::Function *callee = module->getFunction(name);
 
+    if (!callee) {
+        error::error(expr->paren,
+                     std::string("No function of name ")
+                         .append(name)
+                         .append(" exists in the current context"));
+        errored = true;
+        return nullptr;
+    }
+
     if (callee->arg_size() != expr->args.size()) {
-        std::cerr << "Incorrect number of args passed" << std::endl;
+        // std::cerr << "Incorrect number of args passed, expected " <<
+        // callee->arg_size() << " but got " << expr->args.size() << std::endl;
+        error::error(expr->paren,
+                     std::string("Incorrect number of args passed, expected ")
+                         .append(std::to_string(callee->arg_size()))
+                         .append(" but got ")
+                         .append(std::to_string(expr->args.size())));
+        errored = true;
         return nullptr;
     }
 
@@ -143,10 +160,12 @@ llvm::Value *compiler::Compiler::genUnaryExpr(AST::Unary *expr) {
 }
 
 llvm::Value *compiler::Compiler::genVariableExpr(AST::Variable *expr) {
-    llvm::Value *val = named_values[expr->name->text];
+    llvm::AllocaInst *val = named_values.back()[expr->name->text];
     if (val)
-        return val;
+        return builder->CreateLoad(val->getAllocatedType(), val,
+                                   expr->name->text);
     error::error(expr->name, "No variable with that name in this scope.");
+    errored = true;
     return nullptr;
 }
 
@@ -162,9 +181,11 @@ llvm::Value *compiler::Compiler::genLiteralExpr(AST::Literal *expr) {
 }
 
 llvm::Value *compiler::Compiler::genBlockStmt(AST::Block *stmt) {
+    begin_scope();
     for (auto statement : stmt->statements) {
         statement->codegen(this);
     }
+    end_scope();
 
     return nullptr;
 }
@@ -180,6 +201,7 @@ llvm::Value *compiler::Compiler::genFunctionStmt(AST::Function *stmt) {
 
     if (func) {
         error::error(stmt->name, "Functions cannot be redefined");
+        errored = true;
         return nullptr;
     }
 
@@ -203,20 +225,25 @@ llvm::Value *compiler::Compiler::genFunctionStmt(AST::Function *stmt) {
     llvm::BasicBlock *body = llvm::BasicBlock::Create(*context, "body", func);
     builder->SetInsertPoint(body);
 
-    named_values.clear();
+    begin_scope();
     for (auto &a : func->args()) {
-        named_values[std::string(a.getName())] = &a;
+        llvm::AllocaInst *alloca =
+            builder->CreateAlloca(a.getType(), nullptr, a.getName());
+
+        builder->CreateStore(&a, alloca);
+
+        named_values.back()[std::string(a.getName())] = alloca;
     }
 
     for (auto statement : stmt->body) {
         statement->codegen(this);
     }
+    end_scope();
 
-    if (error::errored) {
+    if (error::errored || llvm::verifyFunction(*func, &(llvm::errs()))) {
         func->removeFromParent();
         error::errored = 0;
-    } else {
-        llvm::verifyFunction(*func);
+        errored        = true;
     }
     builder->SetInsertPoint(parent);
 
@@ -241,6 +268,11 @@ llvm::Value *compiler::Compiler::genPrintStmt(AST::Print *stmt) {
     llvm::Value *fmt  = builder->CreateGlobalStringPtr("%f");
     llvm::Value *expr = stmt->expression->codegen(this);
 
+    if (!expr) {
+        error::error(stmt->keyword, "Error evaluating expression");
+        return nullptr;
+    }
+
     builder->CreateCall(print_func, {fmt, expr});
 
     return nullptr;
@@ -255,6 +287,56 @@ llvm::Value *compiler::Compiler::genReturnStmt(AST::Return *stmt) {
 }
 
 llvm::Value *compiler::Compiler::genVarStmt(AST::Var *stmt) {
+    llvm::Function *func = builder->GetInsertBlock()->getParent();
+    llvm::AllocaInst *alloca;
+
+    if (!stmt->initializer) {
+        llvm::Value *init_val;
+        switch (stmt->type.first) {
+        case value::VAL_NUM:
+            init_val = llvm::ConstantFP::get(*context, llvm::APFloat(0.0));
+            break;
+        case value::VAL_BOOL:
+            init_val = builder->getFalse();
+            break;
+        case value::VAL_VOID:
+            error::error(stmt->type.second,
+                         "Variable cannot have a type of 'void'.");
+            errored = true;
+            return nullptr;
+        }
+
+        alloca =
+            builder->CreateAlloca(value_to_type(stmt->type.first)(*context),
+                                  nullptr, stmt->name->text);
+        builder->CreateStore(init_val, alloca);
+        named_values.back()[stmt->name->text] = alloca;
+    } else {
+        llvm::Value *init_val;
+        switch (stmt->type.first) {
+        case value::VAL_NUM:
+            init_val = toFloat(stmt->initializer->codegen(this));
+            break;
+        case value::VAL_BOOL:
+            init_val = toBool(stmt->initializer->codegen(this));
+            break;
+        case value::VAL_VOID:
+            error::error(stmt->type.second,
+                         "Variable cannot have a type of 'void'.");
+            errored = true;
+            return nullptr;
+        }
+
+        alloca =
+            builder->CreateAlloca(value_to_type(stmt->type.first)(*context),
+                                  nullptr, stmt->name->text);
+
+        if (error::errored) {
+            return nullptr;
+        }
+        builder->CreateStore(init_val, alloca);
+        named_values.back()[stmt->name->text] = alloca;
+    }
     return nullptr;
 }
 
@@ -269,16 +351,20 @@ llvm::Value *compiler::Compiler::genForStmt(AST::For *stmt) {
 llvm::Value *compiler::Compiler::genBreakStmt(AST::Break *stmt) {
     if (break_block)
         builder->CreateBr(break_block);
-    else
+    else {
         error::error(stmt->keyword, "No break block present.");
+        errored = true;
+    }
     return nullptr;
 }
 
 llvm::Value *compiler::Compiler::genContinueStmt(AST::Continue *stmt) {
     if (cont_block)
         builder->CreateBr(cont_block);
-    else
+    else {
         error::error(stmt->keyword, "No continue block present.");
+        errored = true;
+    }
     return nullptr;
 }
 
@@ -288,8 +374,7 @@ compiler::Compiler::Compiler() {
     builder = new llvm::IRBuilder(*context);
 
     llvm::Function *top_level = llvm::Function::Create(
-        llvm::FunctionType::get(llvm::Type::getVoidTy(*context),
-                                llvm::Type::getVoidTy(*context), false),
+        llvm::FunctionType::get(llvm::Type::getVoidTy(*context), false),
         llvm::Function::ExternalLinkage, "__main", *module);
 
     llvm::BasicBlock *main =
@@ -301,17 +386,37 @@ void compiler::Compiler::print_code() {
     module->print(llvm::errs(), nullptr);
 }
 
+void compiler::Compiler::verify() {
+    builder->CreateRetVoid();
+    if (llvm::verifyFunction(*(builder->GetInsertBlock()->getParent()),
+                             &(llvm::errs()))) {
+        errored = true;
+    }
+}
+
 llvm::Value *compiler::Compiler::toBool(llvm::Value *val) {
     if (val->getType()->isIntegerTy())
         return builder->CreateICmpNE(val, llvm::ConstantInt::getFalse(*context),
                                      "i_to_bool");
     return builder->CreateFCmpONE(
-        val, llvm::ConstantFP::get(*context, llvm::APFloat(0.0)), "f_to_bool");
+        val, llvm::ConstantFP::get(*context, llvm::APFloat(0.0)), "d_to_bool");
 }
 
 llvm::Value *compiler::Compiler::toFloat(llvm::Value *val) {
+    if (!val) {
+        error::errored = 1;
+        return nullptr;
+    }
     if (val->getType()->isIntegerTy())
-        return builder->CreateUIToFP(val, llvm::Type::getFloatTy(*context),
-                                     "i_to_fp");
+        return builder->CreateUIToFP(val, llvm::Type::getDoubleTy(*context),
+                                     "i_to_d");
     return val;
+}
+
+void compiler::Compiler::begin_scope() {
+    named_values.push_back(std::map<std::string, llvm::AllocaInst *>());
+}
+
+void compiler::Compiler::end_scope() {
+    named_values.pop_back();
 }

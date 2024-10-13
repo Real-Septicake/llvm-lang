@@ -103,8 +103,9 @@ class If : public Stmt {
 /// @brief The node for a print statement
 class Print : public Stmt {
   public:
+    Token *keyword;
     Expr *expression;
-    Print(Expr *expression);
+    Print(Token *keyword, Expr *expression);
     void accept(StmtVisitor *visitor) override;
     llvm::Value *codegen(StmtVisitor *visitor) override;
 };

@@ -29,14 +29,17 @@ int main(int argc, char const *argv[]) {
     }
     Scanner scanner(source);
     std::vector<Token *> toks = scanner.scanTokens();
+#ifdef DEBUG
     std::cout << "\nTokens: " << std::endl;
     for (auto tok : toks) {
         printToken(*tok);
     }
+#endif
     parser::Parser parser(toks);
     std::vector<AST::Stmt *> stmts = parser.parse();
     if (error::errored)
         return 1;
+#ifdef DEBUG
     ASTPrinter printer;
     std::cout << "\nAST:" << std::endl;
     for (auto stmt : stmts) {
@@ -46,10 +49,17 @@ int main(int argc, char const *argv[]) {
         }
         stmt->accept(&printer);
     }
+#endif
     compiler::Compiler *comp = new compiler::Compiler();
     for (auto stmt : stmts) {
         stmt->codegen(comp);
     }
+#ifdef DEBUG
     comp->print_code();
+#endif
+    comp->verify();
+    if (comp->errored) {
+        return 1;
+    }
     return 0;
 }

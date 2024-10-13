@@ -65,7 +65,9 @@ llvm::Value *AST::If::codegen(StmtVisitor *visitor) {
     return visitor->genIfStmt(this);
 }
 
-AST::Print::Print(Expr *expression) : Stmt(StmtType::PrintType) {
+AST::Print::Print(Token *keyword, Expr *expression)
+    : Stmt(StmtType::PrintType) {
+    this->keyword    = keyword;
     this->expression = expression;
 }
 void AST::Print::accept(StmtVisitor *visitor) {
