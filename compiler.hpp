@@ -18,13 +18,20 @@ typedef std::pair<value::ValueType, Token *> TypePair;
 namespace compiler {
 typedef llvm::Type *(*ToType)(llvm::LLVMContext &context);
 
-static std::map<value::ValueType, ToType> value_to_type = {
-    {value::ValueType::VAL_BOOL, llvm::Type::getFloatTy           },
-    {value::ValueType::VAL_NUM,
-     (llvm::Type * (*)(llvm::LLVMContext &)) llvm::Type::getInt1Ty}
-};
+static ToType value_to_type(value::ValueType kind) {
+    switch (kind) {
+    case value::ValueType::VAL_BOOL:
+        return (llvm::Type * (*)(llvm::LLVMContext &)) llvm::Type::getInt1Ty;
+    case value::ValueType::VAL_NUM:
+        return llvm::Type::getFloatTy;
+    case value::ValueType::VAL_VOID:
+        return llvm::Type::getVoidTy;
+    default:
+        return nullptr;
+    }
+}
 
-class Compiler : public AST::ExprVisitor, AST::StmtVisitor {
+class Compiler : public AST::ExprVisitor, public AST::StmtVisitor {
   public:
     virtual llvm::Value *genAssignExpr(AST::Assign *expr) override;
     virtual llvm::Value *genBinaryExpr(AST::Binary *expr) override;
@@ -51,13 +58,17 @@ class Compiler : public AST::ExprVisitor, AST::StmtVisitor {
     virtual llvm::Value *genBreakStmt(AST::Break *stmt) override;
     virtual llvm::Value *genContinueStmt(AST::Continue *stmt) override;
     Compiler();
+    void print_code();
 
   private:
     llvm::LLVMContext *context;
     llvm::Module *module;
     llvm::IRBuilder<> *builder;
     std::map<std::string, llvm::Value *> named_values;
+    llvm::BasicBlock *break_block = nullptr;
+    llvm::BasicBlock *cont_block  = nullptr;
     llvm::Value *toBool(llvm::Value *val);
+    llvm::Value *toFloat(llvm::Value *val);
 };
 } // namespace compiler
 

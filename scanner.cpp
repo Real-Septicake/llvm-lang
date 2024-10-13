@@ -23,6 +23,7 @@ static std::unordered_map<std::string, TokenKind> keywords = {
     {"this",     TokenKind::TOKEN_THIS    },
     {"true",     TokenKind::TOKEN_TRUE    },
     {"var",      TokenKind::TOKEN_VAR     },
+    {"void",     TokenKind::TOKEN_VOID    },
     {"while",    TokenKind::TOKEN_WHILE   }
 };
 

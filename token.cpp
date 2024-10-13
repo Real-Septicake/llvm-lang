@@ -53,6 +53,7 @@ void printToken(Token tok) {
         CONSTANT_TOKEN_CASE(TOKEN_THIS, "this");
         CONSTANT_TOKEN_CASE(TOKEN_TRUE, "true");
         CONSTANT_TOKEN_CASE(TOKEN_VAR, "var");
+        CONSTANT_TOKEN_CASE(TOKEN_VOID, "void");
         CONSTANT_TOKEN_CASE(TOKEN_WHILE, "while");
         CONSTANT_TOKEN_CASE(TOKEN_EOF, "<eof>");
         TOKEN_TEXT_CASE(TOKEN_IDENTIFIER);

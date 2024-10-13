@@ -1,4 +1,3 @@
-fn test(i : num) : num {
-    var t : bool = false;
-    return 4.0;
-}
+fn test() { return 5.4 + 8.2; }
+
+test();

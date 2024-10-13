@@ -49,6 +49,7 @@ enum TokenKind {
     TOKEN_THIS,
     TOKEN_TRUE,
     TOKEN_VAR,
+    TOKEN_VOID,
     TOKEN_WHILE,
 
     TOKEN_EOF

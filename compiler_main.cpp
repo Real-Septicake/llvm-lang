@@ -1,4 +1,5 @@
 #include "ast_printer.hpp"
+#include "compiler.hpp"
 #include "error.hpp"
 #include "expr.hpp"
 #include "parser.hpp"
@@ -33,7 +34,7 @@ int main(int argc, char const *argv[]) {
         printToken(*tok);
     }
     parser::Parser parser(toks);
-    std::vector<Stmt *> stmts = parser.parse();
+    std::vector<AST::Stmt *> stmts = parser.parse();
     if (error::errored)
         return 1;
     ASTPrinter printer;
@@ -45,5 +46,10 @@ int main(int argc, char const *argv[]) {
         }
         stmt->accept(&printer);
     }
+    compiler::Compiler *comp = new compiler::Compiler();
+    for (auto stmt : stmts) {
+        stmt->codegen(comp);
+    }
+    comp->print_code();
     return 0;
 }

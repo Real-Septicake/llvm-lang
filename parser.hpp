@@ -1,5 +1,5 @@
-#ifndef COMPILER_HPP
-#define COMPILER_HPP
+#ifndef PARSER_HPP
+#define PARSER_HPP
 
 #include "expr.hpp"
 #include "stmt.hpp"

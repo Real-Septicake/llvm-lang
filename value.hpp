@@ -7,7 +7,7 @@
 /// @brief A namespace containing members used for values
 namespace value {
 /// @brief Types of values
-enum ValueType { VAL_BOOL, VAL_NUM };
+enum ValueType { VAL_BOOL, VAL_NUM, VAL_VOID };
 
 /// @brief Struct representing values
 typedef struct {

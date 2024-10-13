@@ -10,7 +10,8 @@
 
 static std::unordered_map<TokenKind, value::ValueType> type_map = {
     {TokenKind::TOKEN_BOOL, value::ValueType::VAL_BOOL},
-    {TokenKind::TOKEN_NUM,  value::ValueType::VAL_NUM }
+    {TokenKind::TOKEN_NUM,  value::ValueType::VAL_NUM },
+    {TokenKind::TOKEN_VOID, value::ValueType::VAL_VOID}
 };
 
 std::vector<Stmt *> parser::Parser::parse() {
@@ -83,7 +84,7 @@ Token *parser::Parser::consume(TokenKind type, std::string message) {
 }
 
 std::pair<value::ValueType, Token *> parser::Parser::consume_type() {
-    if (match({TOKEN_BOOL, TOKEN_NUM})) {
+    if (match({TOKEN_BOOL, TOKEN_NUM, TOKEN_VOID})) {
         Token *tok    = previous();
         auto val_type = type_map.find(tok->type);
         if (val_type != type_map.end()) {
@@ -138,9 +139,15 @@ AST::Function *parser::Parser::function(std::string kind) {
     }
     consume(TOKEN_RIGHT_PAREN, "Expect ')' after parameters.");
 
-    consume(TOKEN_COLON, "Expect ':' after " + kind + " parameters");
+    std::pair<value::ValueType, Token *> ret_type;
 
-    auto ret_type = consume_type();
+    if (check(TOKEN_COLON)) {
+        consume(TOKEN_COLON, "Expect ':' after " + kind + " parameters");
+        ret_type = consume_type();
+    } else {
+        ret_type = std::make_pair(value::ValueType::VAL_VOID,
+                                  new Token{TokenKind::TOKEN_VOID, "void", 0});
+    }
 
     consume(TOKEN_LEFT_BRACE, "Expect '{' before " + kind + " body.");
     std::vector<Stmt *> body = block();
@@ -446,7 +453,6 @@ Expr *parser::Parser::primary() {
 
     if (match({TOKEN_IDENTIFIER})) {
         Token *name = previous();
-        consume(TOKEN_COLON, "Expect ':' after variable name.");
         return new AST::Variable(name);
     }
 
