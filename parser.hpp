@@ -25,6 +25,7 @@ class ParseError : public std::runtime_error {
 /// parts of compilation
 class Parser {
   private:
+    enum TypeExpect { VAR, FN };
     /// @brief The tokens being parsed
     std::vector<Token *> tokens;
     /// @brief The index of the current token
@@ -54,7 +55,7 @@ class Parser {
     /// @return True if the next Token is of any of the specified types, false
     /// otherwise or if the scanner has reached the end
     bool match(std::initializer_list<TokenKind> types);
-    std::pair<value::ValueType, Token *> consume_type();
+    std::pair<value::ValueType, Token *> consume_type(TypeExpect expected);
     /// @brief Attempt to pop a Token of the specified type, and produce an
     /// error otherwise
     /// @param type The type of Token to attempt to pop

@@ -98,7 +98,7 @@ def defineAst(baseName: str, longName: str, types: list[tuple[str, str]], includ
     replaceAll(baseName.lower() + ".cpp", "\"comma\"", ",")
 
 defineAst("Expr", "expression", [
-    ("Assign", "Token* name, Expr* value"),
+    ("Assign", "Token* name, Token* equals, Expr* value"),
     ("Binary", "Expr* left, Token* op, Expr* right"),
     ("Call", "Expr* callee, Token* paren, std::vector<Expr*> args"),
     ("Get", "Expr* object, Token* name"),

@@ -12,6 +12,7 @@
 #include <llvm/IR/Type.h>
 #include <llvm/IR/Value.h>
 #include <map>
+#include <set>
 
 typedef std::pair<value::ValueType, Token *> TypePair;
 
@@ -68,12 +69,17 @@ class Compiler : public AST::ExprVisitor, public AST::StmtVisitor {
     llvm::IRBuilder<> *builder;
     std::vector<std::map<std::string, llvm::AllocaInst *>> named_values = {
         std::map<std::string, llvm::AllocaInst *>()};
+    std::set<std::string> reported_missing;
     llvm::BasicBlock *break_block = nullptr;
     llvm::BasicBlock *cont_block  = nullptr;
     llvm::Value *toBool(llvm::Value *val);
     llvm::Value *toFloat(llvm::Value *val);
     void begin_scope();
     void end_scope();
+    llvm::Value *castToType(llvm::Type *ty, llvm::Value *val);
+    llvm::AllocaInst *resolve(Token *name);
+    void reportMissing(Token *name);
+    std::pair<std::string, double> getClosest(Token *name);
 };
 } // namespace compiler
 

@@ -28,6 +28,9 @@ else
 SILENCE := @
 endif
 
+loc:
+	cloc --exclude-dir=termcolor .
+
 format: $(C_FILES)
 	@for file in $?; do \
 		clang-format -i $$file && echo "formatted $$file"; \

@@ -1,7 +1,3 @@
-fn test(a : num) : bool {
-    return a + 5.0;
+fn test() : bool {
+    return !test();
 }
-
-var test2 : num = test(2.0) + 2.0;
-
-print test2;

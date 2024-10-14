@@ -48,8 +48,9 @@ class Expr {
 class Assign : public Expr {
   public:
     Token *name;
+    Token *equals;
     Expr *value;
-    Assign(Token *name, Expr *value);
+    Assign(Token *name, Token *equals, Expr *value);
     void accept(ExprVisitor *visitor) override;
     llvm::Value *codegen(ExprVisitor *visitor) override;
 };

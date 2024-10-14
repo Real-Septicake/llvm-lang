@@ -6,8 +6,22 @@
 #include <iostream>
 #include <llvm/IR/BasicBlock.h>
 #include <llvm/IR/Verifier.h>
+#include <termcolor/termcolor.hpp>
 
 llvm::Value *compiler::Compiler::genAssignExpr(AST::Assign *expr) {
+    llvm::Value *val = expr->value->codegen(this);
+    if (!val) {
+        error::error(expr->equals, "Error evaluating expression.");
+        errored = true;
+        return nullptr;
+    }
+
+    llvm::AllocaInst *var = resolve(expr->name);
+    if (!var) {
+        error::error(expr->name, "Unknown variable name.");
+        errored = true;
+        return nullptr;
+    }
     return nullptr;
 }
 
@@ -30,28 +44,28 @@ llvm::Value *compiler::Compiler::genBinaryExpr(AST::Binary *expr) {
         return builder->CreateFDiv(left, right, "div_tmp");
     case TokenKind::TOKEN_GREATER:
         cmp_eval = builder->CreateFCmpOGT(left, right, "gt_tmp");
-        return builder->CreateUIToFP(cmp_eval, llvm::Type::getFloatTy(*context),
-                                     "gt_eval_tmp");
+        return builder->CreateUIToFP(
+            cmp_eval, llvm::Type::getDoubleTy(*context), "gt_eval_tmp");
     case TokenKind::TOKEN_GREATER_EQUAL:
         cmp_eval = builder->CreateFCmpOGE(left, right, "ge_tmp");
-        return builder->CreateUIToFP(cmp_eval, llvm::Type::getFloatTy(*context),
-                                     "ge_eval_tmp");
+        return builder->CreateUIToFP(
+            cmp_eval, llvm::Type::getDoubleTy(*context), "ge_eval_tmp");
     case TokenKind::TOKEN_LESS:
         cmp_eval = builder->CreateFCmpOLT(left, right, "lt_tmp");
-        return builder->CreateUIToFP(cmp_eval, llvm::Type::getFloatTy(*context),
-                                     "lt_eval_tmp");
+        return builder->CreateUIToFP(
+            cmp_eval, llvm::Type::getDoubleTy(*context), "lt_eval_tmp");
     case TokenKind::TOKEN_LESS_EQUAL:
         cmp_eval = builder->CreateFCmpOLE(left, right, "le_tmp");
-        return builder->CreateUIToFP(cmp_eval, llvm::Type::getFloatTy(*context),
-                                     "le_eval_tmp");
+        return builder->CreateUIToFP(
+            cmp_eval, llvm::Type::getDoubleTy(*context), "le_eval_tmp");
     case TokenKind::TOKEN_EQUAL_EQUAL:
         cmp_eval = builder->CreateFCmpOEQ(left, right, "eq_tmp");
-        return builder->CreateUIToFP(cmp_eval, llvm::Type::getFloatTy(*context),
-                                     "eq_eval_tmp");
+        return builder->CreateUIToFP(
+            cmp_eval, llvm::Type::getDoubleTy(*context), "eq_eval_tmp");
     case TokenKind::TOKEN_BANG_EQUAL:
         cmp_eval = builder->CreateFCmpONE(left, right, "ne_tmp");
-        return builder->CreateUIToFP(cmp_eval, llvm::Type::getFloatTy(*context),
-                                     "ne_eval_tmp");
+        return builder->CreateUIToFP(
+            cmp_eval, llvm::Type::getDoubleTy(*context), "ne_eval_tmp");
     default:
         break;
     }
@@ -143,15 +157,15 @@ llvm::Value *compiler::Compiler::genThisExpr(AST::This *expr) {
 }
 
 llvm::Value *compiler::Compiler::genUnaryExpr(AST::Unary *expr) {
-    llvm::Value *right = toFloat(expr->right->codegen(this));
+    llvm::Value *right = expr->right->codegen(this);
 
     switch (expr->op->type) {
     case TokenKind::TOKEN_BANG:
-        return builder->CreateFCmpOEQ(
-            right, llvm::ConstantFP::get(*context, llvm::APFloat(0.0)),
+        return builder->CreateICmpEQ(
+            toBool(right), builder->getFalse(),
             "not_tmp");
     case TokenKind::TOKEN_MINUS:
-        return builder->CreateFNeg(right, "neg_tmp");
+        return builder->CreateFNeg(toFloat(right), "neg_tmp");
     default:
         break;
     }
@@ -160,11 +174,10 @@ llvm::Value *compiler::Compiler::genUnaryExpr(AST::Unary *expr) {
 }
 
 llvm::Value *compiler::Compiler::genVariableExpr(AST::Variable *expr) {
-    llvm::AllocaInst *val = named_values.back()[expr->name->text];
+    llvm::AllocaInst *val = resolve(expr->name);
     if (val)
         return builder->CreateLoad(val->getAllocatedType(), val,
                                    expr->name->text);
-    error::error(expr->name, "No variable with that name in this scope.");
     errored = true;
     return nullptr;
 }
@@ -279,10 +292,27 @@ llvm::Value *compiler::Compiler::genPrintStmt(AST::Print *stmt) {
 }
 
 llvm::Value *compiler::Compiler::genReturnStmt(AST::Return *stmt) {
-    if (stmt->value)
-        builder->CreateRet(stmt->value->codegen(this));
-    else
-        builder->CreateRetVoid();
+    if (stmt->value) {
+        if (builder->GetInsertBlock()->getParent()->getReturnType() !=
+            builder->getVoidTy()) {
+            llvm::Value *val = castToType(
+                builder->GetInsertBlock()->getParent()->getReturnType(),
+                stmt->value->codegen(this));
+            builder->CreateRet(val);
+        } else {
+            error::error(stmt->keyword,
+                         "Returning value in function of return type 'void'.");
+            errored = 1;
+        }
+    } else {
+        if (builder->GetInsertBlock()->getParent()->getReturnType() ==
+            builder->getVoidTy())
+            builder->CreateRetVoid();
+        else {
+            error::error(stmt->keyword, "Return statement with no value in "
+                                        "function with non-void return type");
+        }
+    }
     return nullptr;
 }
 
@@ -332,7 +362,15 @@ llvm::Value *compiler::Compiler::genVarStmt(AST::Var *stmt) {
                                   nullptr, stmt->name->text);
 
         if (error::errored) {
-            return nullptr;
+            switch (stmt->type.first) {
+            case value::VAL_NUM:
+                init_val = llvm::ConstantFP::get(*context, llvm::APFloat(0.0));
+                break;
+            case value::VAL_BOOL:
+                init_val = builder->getFalse();
+                break;
+            }
+            errored = true;
         }
         builder->CreateStore(init_val, alloca);
         named_values.back()[stmt->name->text] = alloca;
@@ -396,10 +434,9 @@ void compiler::Compiler::verify() {
 
 llvm::Value *compiler::Compiler::toBool(llvm::Value *val) {
     if (val->getType()->isIntegerTy())
-        return builder->CreateICmpNE(val, llvm::ConstantInt::getFalse(*context),
-                                     "i_to_bool");
+        return val;
     return builder->CreateFCmpONE(
-        val, llvm::ConstantFP::get(*context, llvm::APFloat(0.0)), "d_to_bool");
+        val, llvm::ConstantFP::get(*context, llvm::APFloat(0.0)), "d_to_i");
 }
 
 llvm::Value *compiler::Compiler::toFloat(llvm::Value *val) {
@@ -419,4 +456,98 @@ void compiler::Compiler::begin_scope() {
 
 void compiler::Compiler::end_scope() {
     named_values.pop_back();
+}
+
+llvm::Value *compiler::Compiler::castToType(llvm::Type *ty, llvm::Value *val) {
+    if (!val) {
+        error::errored = 1;
+        return nullptr;
+    }
+    switch (ty->getTypeID()) {
+    case llvm::Type::TypeID::VoidTyID:
+        return val;
+    case llvm::Type::TypeID::DoubleTyID:
+        return toFloat(val);
+    case llvm::Type::TypeID::IntegerTyID:
+        return toBool(val);
+    }
+    return nullptr;
+}
+
+llvm::AllocaInst *compiler::Compiler::resolve(Token *name) {
+    for (int i = named_values.size() - 1; i >= 0; i--) {
+        if (auto *alloca = named_values[i][name->text])
+            return alloca;
+    }
+
+    reportMissing(name);
+    return nullptr;
+}
+
+void compiler::Compiler::reportMissing(Token *name) {
+    if (reported_missing.find(name->text) == reported_missing.end()) {
+        error::error(name, "Variable not defined in scope.");
+        auto const [val, dist] = getClosest(name);
+        std::cerr << "Did you mean " << termcolor::bright_green
+                  << termcolor::bold << "'" << val << "'" << termcolor::reset
+                  << "? Distance to suggestion: " << dist << "." << std::endl;
+        reported_missing.insert(name->text);
+    }
+}
+
+static double damerauLevenstein(std::string_view const &a,
+                                std::string_view const &b) {
+    int l_string_length1 = a.length();
+    int l_string_length2 = b.length();
+    int d[l_string_length1 + 1][l_string_length2 + 1];
+
+    int i;
+    int j;
+    int l_cost;
+
+    for (i = 0; i <= l_string_length1; i++) {
+        d[i][0] = i;
+    }
+    for (j = 0; j <= l_string_length2; j++) {
+        d[0][j] = j;
+    }
+    for (i = 1; i <= l_string_length1; i++) {
+        for (j = 1; j <= l_string_length2; j++) {
+            if (a[i - 1] == b[j - 1]) {
+                l_cost = 0;
+            } else {
+                l_cost = 1;
+            }
+            d[i][j] =
+                std::min(d[i - 1][j] + 1,                   // delete
+                         std::min(d[i][j - 1] + 1,          // insert
+                                  d[i - 1][j - 1] + l_cost) // substitution
+                );
+            if ((i > 1) && (j > 1) && (a[i - 1] == b[j - 2]) &&
+                (a[i - 2] == b[j - 1])) {
+                d[i][j] = std::min(d[i][j],
+                                   d[i - 2][j - 2] + l_cost // transposition
+                );
+            }
+        }
+    }
+    return d[l_string_length1][l_string_length2];
+}
+
+std::pair<std::string, double> compiler::Compiler::getClosest(Token *name) {
+    std::string closest;
+    double minv = 2.0;
+    for (auto scope : named_values) {
+        for (auto key : scope) {
+            double dist   = damerauLevenstein(key.first, name->text);
+            double normal = (2 * dist) / (double)(name->text.length() +
+                                                  key.first.length() + dist);
+            if (normal < minv) {
+                closest = key.first;
+                minv    = normal;
+            }
+        }
+    }
+
+    return std::make_pair(closest, minv);
 }

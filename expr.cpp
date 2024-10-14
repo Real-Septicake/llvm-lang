@@ -1,8 +1,10 @@
 #include "expr.hpp"
 
-AST::Assign::Assign(Token *name, Expr *value) : Expr(ExprType::AssignType) {
-    this->name  = name;
-    this->value = value;
+AST::Assign::Assign(Token *name, Token *equals, Expr *value)
+    : Expr(ExprType::AssignType) {
+    this->name   = name;
+    this->equals = equals;
+    this->value  = value;
 }
 void AST::Assign::accept(ExprVisitor *visitor) {
     visitor->visitAssignExpr(this);

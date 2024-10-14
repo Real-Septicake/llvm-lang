@@ -83,8 +83,11 @@ Token *parser::Parser::consume(TokenKind type, std::string message) {
     throw error(peek(), message);
 }
 
-std::pair<value::ValueType, Token *> parser::Parser::consume_type() {
-    if (match({TOKEN_BOOL, TOKEN_NUM, TOKEN_VOID})) {
+std::pair<value::ValueType, Token *>
+parser::Parser::consume_type(TypeExpect expected) {
+    if (expected == TypeExpect::FN &&
+            match({TOKEN_BOOL, TOKEN_NUM, TOKEN_VOID}) ||
+        expected == TypeExpect::VAR && match({TOKEN_BOOL, TOKEN_NUM})) {
         Token *tok    = previous();
         auto val_type = type_map.find(tok->type);
         if (val_type != type_map.end()) {
@@ -92,7 +95,7 @@ std::pair<value::ValueType, Token *> parser::Parser::consume_type() {
         }
     }
 
-    throw error(peek(), "Expect type name.");
+    throw error(peek(), "Expect valid type name.");
 }
 
 bool parser::Parser::isAtEnd() {
@@ -132,7 +135,7 @@ AST::Function *parser::Parser::function(std::string kind) {
 
             Token *param = consume(TOKEN_IDENTIFIER, "Expect parameter name.");
             consume(TOKEN_COLON, "Expect ':' after parameter.");
-            auto type = consume_type();
+            auto type = consume_type(TypeExpect::VAR);
             params.push_back(param);
             types.push_back(type);
         } while (match({TOKEN_COMMA}));
@@ -141,13 +144,8 @@ AST::Function *parser::Parser::function(std::string kind) {
 
     std::pair<value::ValueType, Token *> ret_type;
 
-    if (check(TOKEN_COLON)) {
-        consume(TOKEN_COLON, "Expect ':' after " + kind + " parameters");
-        ret_type = consume_type();
-    } else {
-        ret_type = std::make_pair(value::ValueType::VAL_VOID,
-                                  new Token{TokenKind::TOKEN_VOID, "void", 0});
-    }
+    consume(TOKEN_COLON, "Expect ':' after " + kind + " parameters");
+    ret_type = consume_type(TypeExpect::FN);
 
     consume(TOKEN_LEFT_BRACE, "Expect '{' before " + kind + " body.");
     std::vector<Stmt *> body = block();
@@ -157,7 +155,7 @@ AST::Function *parser::Parser::function(std::string kind) {
 AST::Var *parser::Parser::varDeclaration() {
     Token *name = consume(TOKEN_IDENTIFIER, "Expect variable name.");
     consume(TOKEN_COLON, "Expect ':' after variable name.");
-    auto type = consume_type();
+    auto type = consume_type(TypeExpect::VAR);
 
     Expr *initializer = nullptr;
     if (match({TOKEN_EQUAL})) {
@@ -301,7 +299,7 @@ Expr *parser::Parser::assignment() {
 
         if (expr->type == AST::ExprType::VariableType) {
             Token *name = static_cast<AST::Variable *>(expr)->name;
-            return new AST::Assign(name, value);
+            return new AST::Assign(name, equals, value);
         } else if (expr->type == AST::ExprType::GetType) {
             AST::Get *get = static_cast<AST::Get *>(expr);
             return new AST::Set(get->object, get->name, value);
