@@ -228,7 +228,7 @@ AST::For *parser::Parser::forStatement() {
 }
 
 AST::If *parser::Parser::ifStatement() {
-    consume(TOKEN_LEFT_PAREN, "Expect '(' after 'if'.");
+    Token *paren    = consume(TOKEN_LEFT_PAREN, "Expect '(' after 'if'.");
     Expr *condition = expression();
     consume(TOKEN_RIGHT_PAREN, "Expect ')' after if condition.");
 
@@ -238,7 +238,7 @@ AST::If *parser::Parser::ifStatement() {
         elseBranch = statement();
     }
 
-    return new AST::If(condition, thenBranch, elseBranch);
+    return new AST::If(paren, condition, thenBranch, elseBranch);
 }
 
 AST::Print *parser::Parser::printStatement() {

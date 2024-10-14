@@ -92,10 +92,11 @@ class Class : public Stmt {
 /// @brief The node for an if statement
 class If : public Stmt {
   public:
+    Token *paren;
     Expr *condition;
     Stmt *thenBranch;
     Stmt *elseBranch;
-    If(Expr *condition, Stmt *thenBranch, Stmt *elseBranch);
+    If(Token *paren, Expr *condition, Stmt *thenBranch, Stmt *elseBranch);
     void accept(StmtVisitor *visitor) override;
     llvm::Value *codegen(StmtVisitor *visitor) override;
 };

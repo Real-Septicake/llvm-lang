@@ -161,9 +161,8 @@ llvm::Value *compiler::Compiler::genUnaryExpr(AST::Unary *expr) {
 
     switch (expr->op->type) {
     case TokenKind::TOKEN_BANG:
-        return builder->CreateICmpEQ(
-            toBool(right), builder->getFalse(),
-            "not_tmp");
+        return builder->CreateICmpEQ(toBool(right), builder->getFalse(),
+                                     "not_tmp");
     case TokenKind::TOKEN_MINUS:
         return builder->CreateFNeg(toFloat(right), "neg_tmp");
     default:

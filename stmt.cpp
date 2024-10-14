@@ -52,8 +52,9 @@ llvm::Value *AST::Class::codegen(StmtVisitor *visitor) {
     return visitor->genClassStmt(this);
 }
 
-AST::If::If(Expr *condition, Stmt *thenBranch, Stmt *elseBranch)
+AST::If::If(Token *paren, Expr *condition, Stmt *thenBranch, Stmt *elseBranch)
     : Stmt(StmtType::IfType) {
+    this->paren      = paren;
     this->condition  = condition;
     this->thenBranch = thenBranch;
     this->elseBranch = elseBranch;
