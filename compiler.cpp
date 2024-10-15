@@ -281,8 +281,8 @@ llvm::Value *compiler::Compiler::genFunctionStmt(AST::Function *stmt) {
     builder->SetInsertPoint(ret_bb);
 
     if (ret_alloca) {
-        llvm::Value *ret_val =
-            builder->CreateLoad(ret_alloca->getAllocatedType(), ret_alloca, DEBUG_NAME("ret_val"));
+        llvm::Value *ret_val = builder->CreateLoad(
+            ret_alloca->getAllocatedType(), ret_alloca, DEBUG_NAME("ret_val"));
         builder->CreateRet(ret_val);
     } else {
         builder->CreateRetVoid();
@@ -325,7 +325,7 @@ llvm::Value *compiler::Compiler::genIfStmt(AST::If *stmt) {
     stmt->thenBranch->codegen(this);
 
     if (stmt->elseBranch) {
-        if(br_created)
+        if (br_created)
             br_created = false;
         else
             builder->CreateBr(merge_block);
@@ -335,7 +335,7 @@ llvm::Value *compiler::Compiler::genIfStmt(AST::If *stmt) {
         func->insert(func->end(), else_block);
         builder->SetInsertPoint(else_block);
         stmt->elseBranch->codegen(this);
-        if(br_created)
+        if (br_created)
             br_created = false;
         else
             builder->CreateBr(merge_block);
@@ -343,7 +343,7 @@ llvm::Value *compiler::Compiler::genIfStmt(AST::If *stmt) {
         builder->SetInsertPoint(parent);
         builder->CreateCondBr(cond, then_block, else_block);
     } else {
-        if(br_created)
+        if (br_created)
             br_created = false;
         else
             builder->CreateBr(merge_block);
@@ -508,7 +508,7 @@ llvm::Value *compiler::Compiler::genWhileStmt(AST::While *stmt) {
     parent->insert(parent->end(), body);
     builder->SetInsertPoint(body);
     stmt->body->codegen(this);
-    if(br_created)
+    if (br_created)
         br_created = false;
     else
         builder->CreateBr(condition);

@@ -72,7 +72,7 @@ class Compiler : public AST::ExprVisitor, public AST::StmtVisitor {
     llvm::BasicBlock *cont_block  = nullptr;
     llvm::BasicBlock *ret_block   = nullptr;
     llvm::AllocaInst *ret_alloca  = nullptr;
-    bool br_created = false;
+    bool br_created               = false;
 
     llvm::Value *toBool(llvm::Value *val);
     llvm::Value *toFloat(llvm::Value *val);
