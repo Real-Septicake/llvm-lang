@@ -565,6 +565,10 @@ compiler::Compiler::Compiler(std::string file_name) {
     llvm::Function *top_level = llvm::Function::Create(
         llvm::FunctionType::get(llvm::Type::getVoidTy(*context), false),
         llvm::Function::ExternalLinkage, "__main", *module);
+    llvm::AttrBuilder attrs = llvm::AttrBuilder(*context);
+    attrs.addAttribute(llvm::Attribute::NoRecurse);
+    attrs.addAttribute(llvm::Attribute::MustProgress);
+    top_level->addFnAttrs(attrs);
 
     llvm::BasicBlock *main = llvm::BasicBlock::Create(*context);
     top_level->insert(top_level->begin(), main);
