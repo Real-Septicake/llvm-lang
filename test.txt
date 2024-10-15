@@ -1,3 +1,9 @@
-fn test() : bool {
-    return !test();
+fn test() : num {
+    while(false) {
+        return 1.0;
+    }
+
+    return 0.0;
 }
+
+test();

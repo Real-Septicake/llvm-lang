@@ -67,19 +67,26 @@ class Compiler : public AST::ExprVisitor, public AST::StmtVisitor {
     llvm::LLVMContext *context;
     llvm::Module *module;
     llvm::IRBuilder<> *builder;
-    std::vector<std::map<std::string, llvm::AllocaInst *>> named_values = {
-        std::map<std::string, llvm::AllocaInst *>()};
-    std::set<std::string> reported_missing;
+
     llvm::BasicBlock *break_block = nullptr;
     llvm::BasicBlock *cont_block  = nullptr;
+    llvm::BasicBlock *ret_block   = nullptr;
+    llvm::AllocaInst *ret_alloca  = nullptr;
+
     llvm::Value *toBool(llvm::Value *val);
     llvm::Value *toFloat(llvm::Value *val);
+    llvm::Value *castToType(llvm::Type *ty, llvm::Value *val);
+
     void begin_scope();
     void end_scope();
-    llvm::Value *castToType(llvm::Type *ty, llvm::Value *val);
+
     llvm::AllocaInst *resolve(Token *name);
     void reportMissing(Token *name);
     std::pair<std::string, double> getClosest(Token *name);
+
+    std::vector<std::map<std::string, llvm::AllocaInst *>> named_values = {
+        std::map<std::string, llvm::AllocaInst *>()};
+    std::set<std::string> reported_missing;
 };
 } // namespace compiler
 

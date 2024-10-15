@@ -54,9 +54,7 @@ int main(int argc, char const *argv[]) {
     for (auto stmt : stmts) {
         stmt->codegen(comp);
     }
-#ifdef DEBUG
     comp->print_code();
-#endif
     comp->verify();
     if (comp->errored) {
         return 1;
