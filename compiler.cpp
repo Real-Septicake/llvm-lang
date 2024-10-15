@@ -289,9 +289,19 @@ llvm::Value *compiler::Compiler::genFunctionStmt(AST::Function *stmt) {
     }
 
     end_scope();
+    if(llvm::verifyFunction(*func)) {
+        for (auto block = func->begin(); block != func->end(); block++) {
+            for(auto inst = block->begin(); inst != block->end(); inst++) {
+                if(inst->isTerminator() && inst != --(block->end())) {
+                    error::error(stmt->name, "Function contains unreachable code.");
+                    break;
+                }
+            }
+            if(error::errored) break;
+        }
+    }
 
-    if (error::errored || llvm::verifyFunction(*func, &(llvm::errs()))) {
-        func->dump();
+    if (error::errored) {
         func->removeFromParent();
         error::errored = 0;
         errored        = true;
@@ -546,9 +556,10 @@ llvm::Value *compiler::Compiler::genContinueStmt(AST::Continue *stmt) {
     return nullptr;
 }
 
-compiler::Compiler::Compiler() {
+compiler::Compiler::Compiler(std::string file_name) {
     context = new llvm::LLVMContext();
     module  = new llvm::Module("top level", *context);
+    module->setSourceFileName(file_name);
     builder = new llvm::IRBuilder(*context);
 
     llvm::Function *top_level = llvm::Function::Create(

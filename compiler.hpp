@@ -11,6 +11,7 @@
 #include <llvm/IR/Module.h>
 #include <llvm/IR/Type.h>
 #include <llvm/IR/Value.h>
+#include <llvm/Transforms/Scalar/DCE.h>
 #include <map>
 #include <set>
 
@@ -59,7 +60,7 @@ class Compiler : public AST::ExprVisitor, public AST::StmtVisitor {
     virtual llvm::Value *genForStmt(AST::For *stmt) override;
     virtual llvm::Value *genBreakStmt(AST::Break *stmt) override;
     virtual llvm::Value *genContinueStmt(AST::Continue *stmt) override;
-    Compiler();
+    Compiler(std::string file_name);
     void print_code();
     void verify();
 

@@ -3,6 +3,7 @@ fn test() : num {
     while(cond) {
         if(true) {
             return false;
+            var t : num = false;
         }
     }
 
