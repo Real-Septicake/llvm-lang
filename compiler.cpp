@@ -282,7 +282,7 @@ llvm::Value *compiler::Compiler::genFunctionStmt(AST::Function *stmt) {
 
     if (ret_alloca) {
         llvm::Value *ret_val =
-            builder->CreateLoad(ret_alloca->getAllocatedType(), ret_alloca);
+            builder->CreateLoad(ret_alloca->getAllocatedType(), ret_alloca, DEBUG_NAME("ret_val"));
         builder->CreateRet(ret_val);
     } else {
         builder->CreateRetVoid();
@@ -325,19 +325,28 @@ llvm::Value *compiler::Compiler::genIfStmt(AST::If *stmt) {
     stmt->thenBranch->codegen(this);
 
     if (stmt->elseBranch) {
-        builder->CreateBr(merge_block);
+        if(br_created)
+            br_created = false;
+        else
+            builder->CreateBr(merge_block);
 
         llvm::BasicBlock *else_block =
             llvm::BasicBlock::Create(*context, DEBUG_NAME("else"));
         func->insert(func->end(), else_block);
         builder->SetInsertPoint(else_block);
         stmt->elseBranch->codegen(this);
-        builder->CreateBr(merge_block);
+        if(br_created)
+            br_created = false;
+        else
+            builder->CreateBr(merge_block);
 
         builder->SetInsertPoint(parent);
         builder->CreateCondBr(cond, then_block, else_block);
     } else {
-        builder->CreateBr(merge_block);
+        if(br_created)
+            br_created = false;
+        else
+            builder->CreateBr(merge_block);
         builder->SetInsertPoint(parent);
         builder->CreateCondBr(cond, then_block, merge_block);
     }
@@ -388,6 +397,7 @@ llvm::Value *compiler::Compiler::genReturnStmt(AST::Return *stmt) {
                 return nullptr;
             }
             builder->CreateBr(ret_block);
+            br_created = true;
         } else {
             error::error(stmt->keyword,
                          "Returning value in function of return type 'void'.");
@@ -404,6 +414,7 @@ llvm::Value *compiler::Compiler::genReturnStmt(AST::Return *stmt) {
                 return nullptr;
             }
             builder->CreateBr(ret_block);
+            br_created = true;
         } else {
             error::error(stmt->keyword, "Return statement with no value in "
                                         "function with non-void return type");
@@ -497,7 +508,10 @@ llvm::Value *compiler::Compiler::genWhileStmt(AST::While *stmt) {
     parent->insert(parent->end(), body);
     builder->SetInsertPoint(body);
     stmt->body->codegen(this);
-    builder->CreateBr(condition);
+    if(br_created)
+        br_created = false;
+    else
+        builder->CreateBr(condition);
 
     parent->insert(parent->end(), merge_block);
     builder->SetInsertPoint(merge_block);
@@ -511,9 +525,10 @@ llvm::Value *compiler::Compiler::genForStmt(AST::For *stmt) {
 }
 
 llvm::Value *compiler::Compiler::genBreakStmt(AST::Break *stmt) {
-    if (break_block)
+    if (break_block) {
         builder->CreateBr(break_block);
-    else {
+        br_created = true;
+    } else {
         error::error(stmt->keyword, "No break block present.");
         errored = true;
     }
@@ -521,9 +536,10 @@ llvm::Value *compiler::Compiler::genBreakStmt(AST::Break *stmt) {
 }
 
 llvm::Value *compiler::Compiler::genContinueStmt(AST::Continue *stmt) {
-    if (cont_block)
+    if (cont_block) {
         builder->CreateBr(cont_block);
-    else {
+        br_created = true;
+    } else {
         error::error(stmt->keyword, "No continue block present.");
         errored = true;
     }

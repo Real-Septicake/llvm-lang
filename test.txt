@@ -1,6 +1,9 @@
 fn test() : num {
-    while(false) {
-        return 1.0;
+    var cond : num = 1.0;
+    while(cond) {
+        if(true) {
+            return false;
+        }
     }
 
     return 0.0;
