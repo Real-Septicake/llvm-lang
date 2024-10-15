@@ -289,15 +289,17 @@ llvm::Value *compiler::Compiler::genFunctionStmt(AST::Function *stmt) {
     }
 
     end_scope();
-    if(llvm::verifyFunction(*func)) {
+    if (llvm::verifyFunction(*func)) {
         for (auto block = func->begin(); block != func->end(); block++) {
-            for(auto inst = block->begin(); inst != block->end(); inst++) {
-                if(inst->isTerminator() && inst != --(block->end())) {
-                    error::error(stmt->name, "Function contains unreachable code.");
+            for (auto inst = block->begin(); inst != block->end(); inst++) {
+                if (inst->isTerminator() && inst != --(block->end())) {
+                    error::error(stmt->name,
+                                 "Function contains unreachable code.");
                     break;
                 }
             }
-            if(error::errored) break;
+            if (error::errored)
+                break;
         }
     }
 

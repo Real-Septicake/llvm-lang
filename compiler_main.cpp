@@ -50,8 +50,9 @@ int main(int argc, char const *argv[]) {
         stmt->accept(&printer);
     }
 #endif
-    std::string filename = std::string(argv[1]).substr(std::string(argv[1]).find_last_of("/\\") + 1);
-    filename = filename.substr(0, filename.find_last_of("."));
+    std::string filename = std::string(argv[1]).substr(
+        std::string(argv[1]).find_last_of("/\\") + 1);
+    filename                 = filename.substr(0, filename.find_last_of("."));
     compiler::Compiler *comp = new compiler::Compiler(filename);
     for (auto stmt : stmts) {
         stmt->codegen(comp);
