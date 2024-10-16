@@ -1,5 +1,5 @@
 fn func(n : num) : num {
-    return (true ? n : 0.01);
+    return (n ? true : 0.01);
 }
 
 print func(12);

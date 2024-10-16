@@ -78,6 +78,10 @@ class Compiler : public AST::ExprVisitor, public AST::StmtVisitor {
     bool br_created               = false;
 
     llvm::Value *toBool(llvm::Value *val);
+    /// @brief Convenience method for turning bools to doubles
+    /// @param val Value to convert
+    /// @return The value if it isn't a bool, or the bool converted to a double if it is
+    llvm::Value *awayFromBool(llvm::Value *val);
     llvm::Value *toFloat(llvm::Value *val);
     llvm::Value *castToType(llvm::Type *ty, llvm::Value *val);
 

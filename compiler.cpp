@@ -10,8 +10,10 @@
 
 #ifdef DEBUG
 #define DEBUG_NAME(name) (name)
+#define VERIFY_FUNC(func) llvm::verifyFunction((func), &(llvm::errs()))
 #else
 #define DEBUG_NAME(name) ""
+#define VERIFY_FUNC(func) llvm::verifyFunction((func))
 #endif
 
 llvm::Value *compiler::Compiler::genAssignExpr(AST::Assign *expr) {
@@ -172,6 +174,12 @@ llvm::Value *compiler::Compiler::genTernaryIfExpr(AST::TernaryIf *expr) {
     llvm::Value *then = expr->then->codegen(this);
     llvm::Value *_else = expr->_else->codegen(this);
 
+    if(then->getType() != _else->getType()) {
+        error::error(expr->question, "Ternary 'if' results are not of the same type.");
+        errored = true;
+        return nullptr;
+    }
+
     return builder->CreateSelect(cond, then, _else, "tern.if");
 }
 
@@ -278,7 +286,7 @@ llvm::Value *compiler::Compiler::genFunctionStmt(AST::Function *stmt) {
     }
 
     end_scope();
-    if (llvm::verifyFunction(*func)) {
+    if (VERIFY_FUNC(*func)) {
         for (auto block = func->begin(); block != func->end(); block++) {
             for (auto inst = block->begin(); inst != block->end(); inst++) {
                 if (inst->isTerminator() && inst != --(block->end())) {
@@ -383,9 +391,15 @@ llvm::Value *compiler::Compiler::genReturnStmt(AST::Return *stmt) {
                  ->getParent()
                  ->getReturnType()
                  ->isVoidTy()) {
-            llvm::Value *val = castToType(
+            llvm::Value *val = stmt->value->codegen(this);
+            if(!val) {
+                error::error(stmt->keyword, "Error evaluating return expression.");
+                errored = true;
+                return nullptr;
+            }
+            val = castToType(
                 builder->GetInsertBlock()->getParent()->getReturnType(),
-                stmt->value->codegen(this));
+                val);
             if (!ret_alloca) {
                 error::error(stmt->keyword, "No ret_alloca present");
                 errored = true;
@@ -587,6 +601,12 @@ llvm::Value *compiler::Compiler::toBool(llvm::Value *val) {
     return builder->CreateFCmpONE(
         val, llvm::ConstantFP::get(*context, llvm::APFloat(0.0)),
         DEBUG_NAME("d_to_i"));
+}
+
+llvm::Value *compiler::Compiler::awayFromBool(llvm::Value *val) {
+    if (val->getType()->isIntegerTy())
+        return toFloat(val);
+    return val;
 }
 
 llvm::Value *compiler::Compiler::toFloat(llvm::Value *val) {
