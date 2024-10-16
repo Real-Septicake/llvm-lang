@@ -9,10 +9,10 @@
 #include <termcolor/termcolor.hpp>
 
 #ifdef DEBUG
-#define DEBUG_NAME(name) (name)
+#define DEBUG_NAME(name)  (name)
 #define VERIFY_FUNC(func) llvm::verifyFunction((func), &(llvm::errs()))
 #else
-#define DEBUG_NAME(name) ""
+#define DEBUG_NAME(name)  ""
 #define VERIFY_FUNC(func) llvm::verifyFunction((func))
 #endif
 
@@ -68,6 +68,15 @@ llvm::Value *compiler::Compiler::genBinaryExpr(AST::Binary *expr) {
 }
 
 llvm::Value *compiler::Compiler::genCallExpr(AST::Call *expr) {
+    std::vector<llvm::Value *> args;
+    std::vector<llvm::Type *> tys;
+    for (auto arg : expr->args) {
+        args.push_back(arg->codegen(this));
+        tys.push_back(args.back()->getType());
+        if (!args.back())
+            return nullptr;
+    }
+
     std::string name;
 
     switch (expr->callee->type) {
@@ -80,7 +89,7 @@ llvm::Value *compiler::Compiler::genCallExpr(AST::Call *expr) {
         return nullptr;
     }
 
-    llvm::Function *callee = module->getFunction(name);
+    llvm::Function *callee = module->getFunction(gen_func_name(tys, name));
 
     if (!callee) {
         error::error(expr->paren,
@@ -101,13 +110,6 @@ llvm::Value *compiler::Compiler::genCallExpr(AST::Call *expr) {
                          .append(std::to_string(expr->args.size())));
         errored = true;
         return nullptr;
-    }
-
-    std::vector<llvm::Value *> args;
-    for (auto arg : expr->args) {
-        args.push_back(arg->codegen(this));
-        if (!args.back())
-            return nullptr;
     }
 
     std::string val_name =
@@ -170,12 +172,13 @@ llvm::Value *compiler::Compiler::genUnaryExpr(AST::Unary *expr) {
 }
 
 llvm::Value *compiler::Compiler::genTernaryIfExpr(AST::TernaryIf *expr) {
-    llvm::Value *cond = toBool(expr->condition->codegen(this));
-    llvm::Value *then = expr->then->codegen(this);
+    llvm::Value *cond  = toBool(expr->condition->codegen(this));
+    llvm::Value *then  = expr->then->codegen(this);
     llvm::Value *_else = expr->_else->codegen(this);
 
-    if(then->getType() != _else->getType()) {
-        error::error(expr->question, "Ternary 'if' results are not of the same type.");
+    if (then->getType() != _else->getType()) {
+        error::error(expr->question,
+                     "Ternary 'if' results are not of the same type.");
         errored = true;
         return nullptr;
     }
@@ -220,17 +223,20 @@ llvm::Value *compiler::Compiler::genExpressionStmt(AST::Expression *stmt) {
 
 llvm::Value *compiler::Compiler::genFunctionStmt(AST::Function *stmt) {
     llvm::BasicBlock *parent = builder->GetInsertBlock();
-    llvm::Function *func     = module->getFunction(stmt->name->text);
+
+    std::vector<llvm::Type *> param_types;
+    for (auto ty : stmt->types) {
+        param_types.push_back(value_to_type(ty.first)(*context));
+    }
+
+    std::string name = gen_func_name(param_types, stmt->name->text);
+
+    llvm::Function *func = module->getFunction(name);
 
     if (func) {
         error::error(stmt->name, "Functions cannot be redefined");
         errored = true;
         return nullptr;
-    }
-
-    std::vector<llvm::Type *> param_types;
-    for (auto ty : stmt->types) {
-        param_types.push_back(value_to_type(ty.first)(*context));
     }
 
     llvm::Type *ret_type = value_to_type(stmt->ret_type.first)(*context);
@@ -243,7 +249,7 @@ llvm::Value *compiler::Compiler::genFunctionStmt(AST::Function *stmt) {
         llvm::FunctionType::get(ret_type, param_types, false);
 
     func = llvm::Function::Create(func_type, llvm::Function::ExternalLinkage,
-                                  stmt->name->text, *module);
+                                  name, *module);
     unsigned idx = 0;
     for (auto &arg : func->args()) {
         arg.setName(DEBUG_NAME(stmt->params[idx++]->text));
@@ -392,14 +398,14 @@ llvm::Value *compiler::Compiler::genReturnStmt(AST::Return *stmt) {
                  ->getReturnType()
                  ->isVoidTy()) {
             llvm::Value *val = stmt->value->codegen(this);
-            if(!val) {
-                error::error(stmt->keyword, "Error evaluating return expression.");
+            if (!val) {
+                error::error(stmt->keyword,
+                             "Error evaluating return expression.");
                 errored = true;
                 return nullptr;
             }
             val = castToType(
-                builder->GetInsertBlock()->getParent()->getReturnType(),
-                val);
+                builder->GetInsertBlock()->getParent()->getReturnType(), val);
             if (!ret_alloca) {
                 error::error(stmt->keyword, "No ret_alloca present");
                 errored = true;
@@ -567,6 +573,8 @@ compiler::Compiler::Compiler(std::string file_name) {
     module->setSourceFileName(file_name);
     builder = new llvm::IRBuilder(*context);
 
+    init_lib();
+
     print_fmt = builder->CreateGlobalStringPtr("%f", DEBUG_NAME("print_fmt"),
                                                0U, module);
 
@@ -642,6 +650,25 @@ llvm::Value *compiler::Compiler::castToType(llvm::Type *ty, llvm::Value *val) {
         return toBool(val);
     }
     return nullptr;
+}
+
+std::string compiler::Compiler::type_to_string(llvm::Type *ty) {
+    switch (ty->getTypeID()) {
+    case llvm::Type::IntegerTyID:
+        return "b";
+    case llvm::Type::DoubleTyID:
+        return "d";
+    }
+}
+
+std::string compiler::Compiler::gen_func_name(std::vector<llvm::Type *> tys,
+                                              std::string name) {
+    std::string qualified_name = "_Z" + std::to_string(name.length()) + name;
+    for (auto ty : tys) {
+        qualified_name += type_to_string(ty);
+    }
+
+    return qualified_name;
 }
 
 llvm::AllocaInst *compiler::Compiler::resolve(Token *name) {
@@ -720,4 +747,24 @@ std::pair<std::string, double> compiler::Compiler::getClosest(Token *name) {
     }
 
     return std::make_pair(closest, minv);
+}
+
+void compiler::Compiler::createFToBFunc() {
+    llvm::FunctionType *toBoolTy =
+        llvm::FunctionType::get(llvm::Type::getInt1Ty(*context),
+                                llvm::Type::getDoubleTy(*context), false);
+
+    std::string name =
+        gen_func_name({llvm::Type::getDoubleTy(*context)}, "toBool");
+    auto *func = llvm::Function::Create(
+        toBoolTy, llvm::Function::ExternalLinkage, name, *(module));
+
+    auto *body = llvm::BasicBlock::Create(*context, DEBUG_NAME("entry"), func);
+    builder->SetInsertPoint(body);
+
+    builder->CreateRet(toBool(func->arg_begin()));
+}
+
+void compiler::Compiler::init_lib() {
+    createFToBFunc();
 }

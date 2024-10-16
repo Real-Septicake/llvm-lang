@@ -80,10 +80,13 @@ class Compiler : public AST::ExprVisitor, public AST::StmtVisitor {
     llvm::Value *toBool(llvm::Value *val);
     /// @brief Convenience method for turning bools to doubles
     /// @param val Value to convert
-    /// @return The value if it isn't a bool, or the bool converted to a double if it is
+    /// @return The value if it isn't a bool, or the bool converted to a double
+    /// if it is
     llvm::Value *awayFromBool(llvm::Value *val);
     llvm::Value *toFloat(llvm::Value *val);
     llvm::Value *castToType(llvm::Type *ty, llvm::Value *val);
+    std::string type_to_string(llvm::Type *ty);
+    std::string gen_func_name(std::vector<llvm::Type *> tys, std::string name);
 
     void begin_scope();
     void end_scope();
@@ -95,6 +98,10 @@ class Compiler : public AST::ExprVisitor, public AST::StmtVisitor {
     std::vector<std::map<std::string, llvm::AllocaInst *>> named_values = {
         std::map<std::string, llvm::AllocaInst *>()};
     std::set<std::string> reported_missing;
+
+    void init_lib();
+
+    void createFToBFunc();
 };
 } // namespace compiler
 

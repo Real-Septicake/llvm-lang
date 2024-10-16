@@ -18,8 +18,7 @@ void error::error(Token *token, std::string message) {
 }
 
 void error::report(int line, std::string where, std::string message) {
-    std::cerr << "\n"
-              << termcolor::bright_red << termcolor::bold << "[line " << line
+    std::cerr << termcolor::bright_red << termcolor::bold << "[line " << line
               << "] Error" << where << termcolor::reset << ": " << message
               << std::endl;
     errored = true;

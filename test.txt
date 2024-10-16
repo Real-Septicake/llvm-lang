@@ -1,5 +1,9 @@
-fn func(n : num) : num {
-    return (n ? true : 0.01);
+fn func(n : num, b : bool) : num {
+    return (n ? true : toBool(0.01));
 }
 
-print func(12);
+fn func(n : bool, b : num) : num {
+    return 0;
+}
+
+print func(12, false);
