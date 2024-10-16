@@ -102,6 +102,9 @@ void Scanner::scanToken() {
     case '*':
         addToken(TokenKind::TOKEN_STAR);
         break;
+    case '?':
+        addToken(TokenKind::TOKEN_QUESTION);
+        break;
     case ':':
         addToken(TokenKind::TOKEN_COLON);
         break;

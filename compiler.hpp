@@ -45,6 +45,7 @@ class Compiler : public AST::ExprVisitor, public AST::StmtVisitor {
     virtual llvm::Value *genSuperExpr(AST::Super *expr) override;
     virtual llvm::Value *genThisExpr(AST::This *expr) override;
     virtual llvm::Value *genUnaryExpr(AST::Unary *expr) override;
+    virtual llvm::Value *genTernaryIfExpr(AST::TernaryIf *expr) override;
     virtual llvm::Value *genVariableExpr(AST::Variable *expr) override;
     virtual llvm::Value *genLiteralExpr(AST::Literal *expr) override;
     virtual llvm::Value *genBlockStmt(AST::Block *stmt) override;
@@ -67,6 +68,8 @@ class Compiler : public AST::ExprVisitor, public AST::StmtVisitor {
     llvm::LLVMContext *context;
     llvm::Module *module;
     llvm::IRBuilder<> *builder;
+
+    llvm::Value *print_fmt;
 
     llvm::BasicBlock *break_block = nullptr;
     llvm::BasicBlock *cont_block  = nullptr;

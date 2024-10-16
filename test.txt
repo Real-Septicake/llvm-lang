@@ -1,7 +1,5 @@
 fn func(n : num) : num {
-    if(n <= 2)
-        return 1;
-    return (func(n - 1) + func(n - 2));
+    return (true ? n : 0.01);
 }
 
-func(12);
+print func(12);

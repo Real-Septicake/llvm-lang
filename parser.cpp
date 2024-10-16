@@ -287,7 +287,15 @@ Stmt *parser::Parser::expressionStatement() {
 }
 
 Expr *parser::Parser::expression() {
-    return assignment();
+    Expr *expr = assignment();
+    if (match({TOKEN_QUESTION})) {
+        Token *question = previous();
+        Expr *then      = expression();
+        Token *colon    = consume(TOKEN_COLON, "Expect ':' for ternary 'if'.");
+        Expr *_else     = expression();
+        return new AST::TernaryIf(expr, question, then, colon, _else);
+    } else
+        return expr;
 }
 
 Expr *parser::Parser::assignment() {
