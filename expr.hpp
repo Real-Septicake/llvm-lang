@@ -23,6 +23,7 @@ enum ExprType {
     SuperType,
     ThisType,
     UnaryType,
+    TernaryIfType,
     VariableType,
     LiteralType,
 };
@@ -147,6 +148,20 @@ class Unary : public Expr {
     llvm::Value *codegen(ExprVisitor *visitor) override;
 };
 
+/// @brief The node for a ternaryif expression
+class TernaryIf : public Expr {
+  public:
+    Expr *condition;
+    Token *question;
+    Expr *then;
+    Token *colon;
+    Expr *_else;
+    TernaryIf(Expr *condition, Token *question, Expr *then, Token *colon,
+              Expr *_else);
+    void accept(ExprVisitor *visitor) override;
+    llvm::Value *codegen(ExprVisitor *visitor) override;
+};
+
 /// @brief The node for a variable expression
 class Variable : public Expr {
   public:
@@ -246,6 +261,14 @@ class ExprVisitor {
         return;
     }
     virtual llvm::Value *genUnaryExpr(AST::Unary *expr) {
+        return nullptr;
+    }
+    /// @brief Visit the AST::TernaryIf node
+    /// @param expr The node to visit
+    virtual void visitTernaryIfExpr(AST::TernaryIf *expr) {
+        return;
+    }
+    virtual llvm::Value *genTernaryIfExpr(AST::TernaryIf *expr) {
         return nullptr;
     }
     /// @brief Visit the AST::Variable node

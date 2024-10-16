@@ -108,6 +108,7 @@ defineAst("Expr", "expression", [
     ("Super", "Token* keyword, Token* method"),
     ("This", "Token* keyword"),
     ("Unary", "Token* op, Expr* right"),
+    ("TernaryIf", "Expr* condition, Token* question, Expr* then, Token* colon, Expr* _else"),
     ("Variable", "Token* name"),
     ("Literal", "value::Value value")
 ], ["<vector>", "<utility>", "\"value.hpp\""])

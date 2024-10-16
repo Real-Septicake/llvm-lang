@@ -24,6 +24,7 @@ class ASTPrinter : public AST::ExprVisitor, public AST::StmtVisitor {
     void visitSuperExpr(AST::Super *expr) override;
     void visitThisExpr(AST::This *expr) override;
     void visitUnaryExpr(AST::Unary *expr) override;
+    void visitTernaryIfExpr(AST::TernaryIf *expr) override;
     void visitVariableExpr(AST::Variable *expr) override;
     void visitLiteralExpr(AST::Literal *expr) override;
     void visitBlockStmt(AST::Block *stmt) override;

@@ -167,6 +167,14 @@ llvm::Value *compiler::Compiler::genUnaryExpr(AST::Unary *expr) {
     return nullptr;
 }
 
+llvm::Value *compiler::Compiler::genTernaryIfExpr(AST::TernaryIf *expr) {
+    llvm::Value *cond = toBool(expr->condition->codegen(this));
+    llvm::Value *then = expr->then->codegen(this);
+    llvm::Value *_else = expr->_else->codegen(this);
+
+    return builder->CreateSelect(cond, then, _else, "tern.if");
+}
+
 llvm::Value *compiler::Compiler::genVariableExpr(AST::Variable *expr) {
     llvm::AllocaInst *val = resolve(expr->name);
     if (val)
@@ -356,7 +364,7 @@ llvm::Value *compiler::Compiler::genPrintStmt(AST::Print *stmt) {
             llvm::IntegerType::getInt32Ty(*context),
             llvm::PointerType::get(llvm::Type::getInt8Ty(*context), 0), true));
 
-    llvm::Value *fmt  = builder->CreateGlobalStringPtr("%f");
+    llvm::Value *fmt  = print_fmt;
     llvm::Value *expr = stmt->expression->codegen(this);
 
     if (!expr) {
@@ -544,6 +552,9 @@ compiler::Compiler::Compiler(std::string file_name) {
     module  = new llvm::Module("top level", *context);
     module->setSourceFileName(file_name);
     builder = new llvm::IRBuilder(*context);
+
+    print_fmt = builder->CreateGlobalStringPtr("%f", DEBUG_NAME("print_fmt"),
+                                               0U, module);
 
     llvm::Function *top_level = llvm::Function::Create(
         llvm::FunctionType::get(llvm::Type::getVoidTy(*context), false),

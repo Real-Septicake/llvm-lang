@@ -77,6 +77,16 @@ void ASTPrinter::visitUnaryExpr(AST::Unary *expr) {
     std::cout << ")";
 }
 
+void ASTPrinter::visitTernaryIfExpr(AST::TernaryIf *expr) {
+    std::cout << "(";
+    expr->condition->accept(this);
+    std::cout << " then ";
+    expr->then->accept(this);
+    std::cout << " else ";
+    expr->_else->accept(this);
+    std::cout << ")";
+}
+
 void ASTPrinter::visitVariableExpr(AST::Variable *expr) {
     std::cout << expr->name->text;
 }

@@ -118,6 +118,22 @@ llvm::Value *AST::Unary::codegen(ExprVisitor *visitor) {
     return visitor->genUnaryExpr(this);
 }
 
+AST::TernaryIf::TernaryIf(Expr *condition, Token *question, Expr *then,
+                          Token *colon, Expr *_else)
+    : Expr(ExprType::TernaryIfType) {
+    this->condition = condition;
+    this->question  = question;
+    this->then      = then;
+    this->colon     = colon;
+    this->_else     = _else;
+}
+void AST::TernaryIf::accept(ExprVisitor *visitor) {
+    visitor->visitTernaryIfExpr(this);
+}
+llvm::Value *AST::TernaryIf::codegen(ExprVisitor *visitor) {
+    return visitor->genTernaryIfExpr(this);
+}
+
 AST::Variable::Variable(Token *name) : Expr(ExprType::VariableType) {
     this->name = name;
 }
