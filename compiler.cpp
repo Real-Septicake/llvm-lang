@@ -9,7 +9,7 @@
 #include <termcolor/termcolor.hpp>
 
 #ifdef DEBUG
-#define DEBUG_NAME(name) name
+#define DEBUG_NAME(name) (name)
 #else
 #define DEBUG_NAME(name) ""
 #endif
@@ -24,11 +24,11 @@ llvm::Value *compiler::Compiler::genAssignExpr(AST::Assign *expr) {
 
     llvm::AllocaInst *var = resolve(expr->name);
     if (!var) {
-        error::error(expr->name, "Unknown variable name.");
         errored = true;
         return nullptr;
     }
-    return nullptr;
+    builder->CreateStore(val, var);
+    return val;
 }
 
 llvm::Value *compiler::Compiler::genBinaryExpr(AST::Binary *expr) {
@@ -36,8 +36,6 @@ llvm::Value *compiler::Compiler::genBinaryExpr(AST::Binary *expr) {
     llvm::Value *right = toFloat(expr->right->codegen(this));
     if (!left || !right)
         return nullptr;
-
-    llvm::Value *cmp_eval;
 
     switch (expr->op->type) {
     case TokenKind::TOKEN_PLUS:
@@ -49,35 +47,17 @@ llvm::Value *compiler::Compiler::genBinaryExpr(AST::Binary *expr) {
     case TokenKind::TOKEN_SLASH:
         return builder->CreateFDiv(left, right, DEBUG_NAME("div_tmp"));
     case TokenKind::TOKEN_GREATER:
-        cmp_eval = builder->CreateFCmpOGT(left, right, DEBUG_NAME("gt_tmp"));
-        return builder->CreateUIToFP(cmp_eval,
-                                     llvm::Type::getDoubleTy(*context),
-                                     DEBUG_NAME("gt_eval_tmp"));
+        return builder->CreateFCmpOGT(left, right, DEBUG_NAME("gt_tmp"));
     case TokenKind::TOKEN_GREATER_EQUAL:
-        cmp_eval = builder->CreateFCmpOGE(left, right, DEBUG_NAME("ge_tmp"));
-        return builder->CreateUIToFP(cmp_eval,
-                                     llvm::Type::getDoubleTy(*context),
-                                     DEBUG_NAME("ge_eval_tmp"));
+        return builder->CreateFCmpOGE(left, right, DEBUG_NAME("ge_tmp"));
     case TokenKind::TOKEN_LESS:
-        cmp_eval = builder->CreateFCmpOLT(left, right, DEBUG_NAME("lt_tmp"));
-        return builder->CreateUIToFP(cmp_eval,
-                                     llvm::Type::getDoubleTy(*context),
-                                     DEBUG_NAME("lt_eval_tmp"));
+        return builder->CreateFCmpOLT(left, right, DEBUG_NAME("lt_tmp"));
     case TokenKind::TOKEN_LESS_EQUAL:
-        cmp_eval = builder->CreateFCmpOLE(left, right, DEBUG_NAME("le_tmp"));
-        return builder->CreateUIToFP(cmp_eval,
-                                     llvm::Type::getDoubleTy(*context),
-                                     DEBUG_NAME("le_eval_tmp"));
+        return builder->CreateFCmpOLE(left, right, DEBUG_NAME("le_tmp"));
     case TokenKind::TOKEN_EQUAL_EQUAL:
-        cmp_eval = builder->CreateFCmpOEQ(left, right, DEBUG_NAME("eq_tmp"));
-        return builder->CreateUIToFP(cmp_eval,
-                                     llvm::Type::getDoubleTy(*context),
-                                     DEBUG_NAME("eq_eval_tmp"));
+        return builder->CreateFCmpOEQ(left, right, DEBUG_NAME("eq_tmp"));
     case TokenKind::TOKEN_BANG_EQUAL:
-        cmp_eval = builder->CreateFCmpONE(left, right, DEBUG_NAME("ne_tmp"));
-        return builder->CreateUIToFP(cmp_eval,
-                                     llvm::Type::getDoubleTy(*context),
-                                     DEBUG_NAME("ne_eval_tmp"));
+        return builder->CreateFCmpONE(left, right, DEBUG_NAME("ne_tmp"));
     default:
         break;
     }
@@ -191,7 +171,7 @@ llvm::Value *compiler::Compiler::genVariableExpr(AST::Variable *expr) {
     llvm::AllocaInst *val = resolve(expr->name);
     if (val)
         return builder->CreateLoad(val->getAllocatedType(), val,
-                                   expr->name->text);
+                                   DEBUG_NAME(expr->name->text));
     errored = true;
     return nullptr;
 }
@@ -250,11 +230,11 @@ llvm::Value *compiler::Compiler::genFunctionStmt(AST::Function *stmt) {
                                   stmt->name->text, *module);
     unsigned idx = 0;
     for (auto &arg : func->args()) {
-        arg.setName(stmt->params[idx++]->text);
+        arg.setName(DEBUG_NAME(stmt->params[idx++]->text));
     }
 
     llvm::BasicBlock *body =
-        llvm::BasicBlock::Create(*context, DEBUG_NAME("body"), func);
+        llvm::BasicBlock::Create(*context, DEBUG_NAME("entry"), func);
     builder->SetInsertPoint(body);
 
     if (!ret_type->isVoidTy()) {
@@ -264,13 +244,14 @@ llvm::Value *compiler::Compiler::genFunctionStmt(AST::Function *stmt) {
     }
 
     begin_scope();
+    idx = 0;
     for (auto &a : func->args()) {
-        llvm::AllocaInst *alloca =
-            builder->CreateAlloca(a.getType(), nullptr, a.getName());
+        llvm::AllocaInst *alloca = builder->CreateAlloca(
+            a.getType(), nullptr, DEBUG_NAME(a.getName() + ".addr"));
 
         builder->CreateStore(&a, alloca);
 
-        named_values.back()[std::string(a.getName())] = alloca;
+        named_values.back()[std::string(stmt->params[idx++]->text)] = alloca;
     }
 
     for (auto statement : stmt->body) {
@@ -329,9 +310,9 @@ llvm::Value *compiler::Compiler::genIfStmt(AST::If *stmt) {
     llvm::Function *func     = builder->GetInsertBlock()->getParent();
 
     llvm::BasicBlock *then_block =
-        llvm::BasicBlock::Create(*context, DEBUG_NAME("then"), func);
+        llvm::BasicBlock::Create(*context, DEBUG_NAME("if.then"), func);
     llvm::BasicBlock *merge_block =
-        llvm::BasicBlock::Create(*context, DEBUG_NAME("if_merge"));
+        llvm::BasicBlock::Create(*context, DEBUG_NAME("if.end"));
 
     builder->SetInsertPoint(then_block);
     stmt->thenBranch->codegen(this);
@@ -343,7 +324,7 @@ llvm::Value *compiler::Compiler::genIfStmt(AST::If *stmt) {
             builder->CreateBr(merge_block);
 
         llvm::BasicBlock *else_block =
-            llvm::BasicBlock::Create(*context, DEBUG_NAME("else"));
+            llvm::BasicBlock::Create(*context, DEBUG_NAME("if.else"));
         func->insert(func->end(), else_block);
         builder->SetInsertPoint(else_block);
         stmt->elseBranch->codegen(this);
@@ -478,7 +459,7 @@ llvm::Value *compiler::Compiler::genVarStmt(AST::Var *stmt) {
 
         alloca =
             builder->CreateAlloca(value_to_type(stmt->type.first)(*context),
-                                  nullptr, stmt->name->text);
+                                  nullptr, DEBUG_NAME(stmt->name->text));
 
         if (error::errored) {
             switch (stmt->type.first) {
@@ -504,12 +485,12 @@ llvm::Value *compiler::Compiler::genWhileStmt(AST::While *stmt) {
     llvm::BasicBlock *prev_cont  = cont_block;
 
     llvm::BasicBlock *condition =
-        llvm::BasicBlock::Create(*context, DEBUG_NAME("cond"), parent);
+        llvm::BasicBlock::Create(*context, DEBUG_NAME("while.cond"), parent);
     cont_block = condition;
     llvm::BasicBlock *body =
-        llvm::BasicBlock::Create(*context, DEBUG_NAME("while_body"));
+        llvm::BasicBlock::Create(*context, DEBUG_NAME("while.body"));
     llvm::BasicBlock *merge_block =
-        llvm::BasicBlock::Create(*context, DEBUG_NAME("while_cont"));
+        llvm::BasicBlock::Create(*context, DEBUG_NAME("while.end"));
     break_block = merge_block;
 
     builder->CreateBr(condition);

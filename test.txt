@@ -1,13 +1,7 @@
-fn test() : num {
-    var cond : num = 1.0;
-    while(cond) {
-        if(true) {
-            return false;
-            var t : num = false;
-        }
-    }
-
-    return 0.0;
+fn func(n : num) : num {
+    if(n <= 2)
+        return 1;
+    return (func(n - 1) + func(n - 2));
 }
 
-test();
+func(12);
