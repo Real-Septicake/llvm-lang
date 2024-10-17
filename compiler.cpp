@@ -749,7 +749,7 @@ std::pair<std::string, double> compiler::Compiler::getClosest(Token *name) {
     return std::make_pair(closest, minv);
 }
 
-void compiler::Compiler::createFToBFunc() {
+void compiler::Compiler::createDToBFunc() {
     llvm::FunctionType *toBoolTy =
         llvm::FunctionType::get(llvm::Type::getInt1Ty(*context),
                                 llvm::Type::getDoubleTy(*context), false);
@@ -757,7 +757,7 @@ void compiler::Compiler::createFToBFunc() {
     std::string name =
         gen_func_name({llvm::Type::getDoubleTy(*context)}, "toBool");
     auto *func = llvm::Function::Create(
-        toBoolTy, llvm::Function::ExternalLinkage, name, *(module));
+        toBoolTy, llvm::Function::ExternalLinkage, name, *module);
 
     auto *body = llvm::BasicBlock::Create(*context, DEBUG_NAME("entry"), func);
     builder->SetInsertPoint(body);
@@ -765,6 +765,22 @@ void compiler::Compiler::createFToBFunc() {
     builder->CreateRet(toBool(func->arg_begin()));
 }
 
+void compiler::Compiler::createBToDFunc() {
+    llvm::FunctionType *toDoubleTy =
+        llvm::FunctionType::get(llvm::Type::getDoubleTy(*context),
+        llvm::Type::getInt1Ty(*context), false);
+    
+    std::string name =
+        gen_func_name({llvm::Type::getInt1Ty(*context)}, "toNum");
+    auto *func = llvm::Function::Create(toDoubleTy, llvm::Function::ExternalLinkage, name, *module);
+
+    auto *body = llvm::BasicBlock::Create(*context, DEBUG_NAME("entry"), func);
+    builder->SetInsertPoint(body);
+
+    builder->CreateRet(toFloat(func->arg_begin()));
+}
+
 void compiler::Compiler::init_lib() {
-    createFToBFunc();
+    createDToBFunc();
+    createBToDFunc();
 }

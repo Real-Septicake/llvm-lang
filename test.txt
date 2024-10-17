@@ -1,5 +1,5 @@
 fn func(n : num, b : bool) : num {
-    return (n ? true : toBool(0.01));
+    return (n ? true : toBool(toNum(toBool(0.01))));
 }
 
 fn func(n : bool, b : num) : num {

@@ -101,7 +101,8 @@ class Compiler : public AST::ExprVisitor, public AST::StmtVisitor {
 
     void init_lib();
 
-    void createFToBFunc();
+    void createDToBFunc();
+    void createBToDFunc();
 };
 } // namespace compiler
 
