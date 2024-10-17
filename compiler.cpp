@@ -287,9 +287,8 @@ llvm::Value *compiler::Compiler::genFunctionStmt(AST::Function *stmt) {
         statement->codegen(this);
     }
 
-    // reset if last statement is `return`
-    if(br_created)
-        br_created = false;
+    // Make sure it gets reset
+    br_created = false;
 
     func->insert(func->end(), ret_bb);
     builder->SetInsertPoint(ret_bb);
