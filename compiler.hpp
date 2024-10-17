@@ -63,6 +63,7 @@ class Compiler : public AST::ExprVisitor, public AST::StmtVisitor {
     Compiler(std::string file_name);
     void print_code();
     void verify();
+    int write(std::string file);
 
   private:
     llvm::LLVMContext *context;

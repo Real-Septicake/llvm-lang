@@ -1,9 +1,14 @@
-fn func(n : num, b : bool) : num {
-    return (n ? true : toBool(toNum(toBool(0.01))));
+fn func2(n : num) : num {
+    return 2 * 8 + n;
 }
 
-fn func(n : bool, b : num) : num {
-    return 0;
+fn func(rep : num) : void {
+    var i : num = 0;
+    while(i < rep) {
+        print func2(i) / 3;
+        i = i + 1;
+    }
+    return;
 }
 
-print func(12, false);
+func(12);

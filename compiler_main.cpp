@@ -60,9 +60,14 @@ int main(int argc, char const *argv[]) {
     if (comp->errored) {
         return 1;
     }
+#ifdef DEBUG
     comp->print_code();
+#endif
     comp->verify();
     if (comp->errored) {
+        return 1;
+    }
+    if (comp->write("out.o")) {
         return 1;
     }
     return 0;

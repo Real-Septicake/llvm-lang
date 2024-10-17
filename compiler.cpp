@@ -5,7 +5,14 @@
 
 #include <iostream>
 #include <llvm/IR/BasicBlock.h>
+#include <llvm/IR/LegacyPassManager.h>
 #include <llvm/IR/Verifier.h>
+#include <llvm/MC/TargetRegistry.h>
+#include <llvm/Support/TargetSelect.h>
+#include <llvm/Target/TargetMachine.h>
+#include <llvm/Target/TargetOptions.h>
+#include <llvm/TargetParser/Host.h>
+#include <system_error>
 #include <termcolor/termcolor.hpp>
 
 #ifdef DEBUG
@@ -177,7 +184,7 @@ llvm::Value *compiler::Compiler::genTernaryIfExpr(AST::TernaryIf *expr) {
     llvm::Value *_else = expr->_else->codegen(this);
 
     if (then->getType() != _else->getType()) {
-        error::error(expr->question,
+        error::error(expr->colon,
                      "Ternary 'if' results are not of the same type.");
         errored = true;
         return nullptr;
@@ -280,6 +287,10 @@ llvm::Value *compiler::Compiler::genFunctionStmt(AST::Function *stmt) {
         statement->codegen(this);
     }
 
+    // reset if last statement is `return`
+    if(br_created)
+        br_created = false;
+
     func->insert(func->end(), ret_bb);
     builder->SetInsertPoint(ret_bb);
 
@@ -287,6 +298,7 @@ llvm::Value *compiler::Compiler::genFunctionStmt(AST::Function *stmt) {
         llvm::Value *ret_val = builder->CreateLoad(
             ret_alloca->getAllocatedType(), ret_alloca, DEBUG_NAME("ret_val"));
         builder->CreateRet(ret_val);
+        ret_alloca = nullptr;
     } else {
         builder->CreateRetVoid();
     }
@@ -575,7 +587,7 @@ compiler::Compiler::Compiler(std::string file_name) {
 
     init_lib();
 
-    print_fmt = builder->CreateGlobalStringPtr("%f", DEBUG_NAME("print_fmt"),
+    print_fmt = builder->CreateGlobalStringPtr("%f\n", DEBUG_NAME("print_fmt"),
                                                0U, module);
 
     llvm::Function *top_level = llvm::Function::Create(
@@ -601,6 +613,47 @@ void compiler::Compiler::verify() {
                              &(llvm::errs()))) {
         errored = true;
     }
+}
+
+int compiler::Compiler::write(std::string file) {
+    llvm::InitializeAllTargetInfos();
+    llvm::InitializeAllTargets();
+    llvm::InitializeAllTargetMCs();
+    llvm::InitializeAllAsmParsers();
+    llvm::InitializeAllAsmPrinters();
+
+    auto target_triple = llvm::sys::getDefaultTargetTriple();
+    std::string error;
+    auto target = llvm::TargetRegistry::lookupTarget(target_triple, error);
+
+    if (!target) {
+        llvm::errs() << error;
+        return 1;
+    }
+
+    auto CPU      = "generic";
+    auto features = "";
+
+    llvm::TargetOptions opt;
+    auto target_machine = target->createTargetMachine(
+        target_triple, CPU, features, opt, llvm::Reloc::PIC_);
+    module->setDataLayout(target_machine->createDataLayout());
+    module->setTargetTriple(target_triple);
+
+    std::error_code ec;
+    llvm::raw_fd_ostream dest(file, ec, (llvm::sys::fs::OpenFlags)0);
+
+    llvm::legacy::PassManager pass;
+    auto file_type = llvm::CodeGenFileType::ObjectFile;
+
+    if (target_machine->addPassesToEmitFile(pass, dest, nullptr, file_type)) {
+        llvm::errs() << "Target machine can't emit a file of this type.";
+        return 1;
+    }
+
+    pass.run(*module);
+    dest.flush();
+    return 0;
 }
 
 llvm::Value *compiler::Compiler::toBool(llvm::Value *val) {
@@ -768,11 +821,12 @@ void compiler::Compiler::createDToBFunc() {
 void compiler::Compiler::createBToDFunc() {
     llvm::FunctionType *toDoubleTy =
         llvm::FunctionType::get(llvm::Type::getDoubleTy(*context),
-        llvm::Type::getInt1Ty(*context), false);
-    
+                                llvm::Type::getInt1Ty(*context), false);
+
     std::string name =
         gen_func_name({llvm::Type::getInt1Ty(*context)}, "toNum");
-    auto *func = llvm::Function::Create(toDoubleTy, llvm::Function::ExternalLinkage, name, *module);
+    auto *func = llvm::Function::Create(
+        toDoubleTy, llvm::Function::ExternalLinkage, name, *module);
 
     auto *body = llvm::BasicBlock::Create(*context, DEBUG_NAME("entry"), func);
     builder->SetInsertPoint(body);

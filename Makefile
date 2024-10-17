@@ -31,6 +31,9 @@ endif
 loc:
 	cloc --exclude-dir=termcolor .
 
+link-file:
+	@g++ out.o main.cpp
+
 format: $(C_FILES)
 	@for file in $?; do \
 		clang-format -i $$file && echo "formatted $$file"; \
