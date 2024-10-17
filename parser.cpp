@@ -383,7 +383,7 @@ Expr *parser::Parser::term() {
 Expr *parser::Parser::factor() {
     Expr *expr = unary();
 
-    while (match({TOKEN_SLASH, TOKEN_STAR})) {
+    while (match({TOKEN_SLASH, TOKEN_STAR, TOKEN_MODULO})) {
         Token *op   = previous();
         Expr *right = unary();
         expr        = new AST::Binary(expr, op, right);

@@ -25,6 +25,7 @@ void printToken(Token tok) {
         CONSTANT_TOKEN_CASE(TOKEN_MINUS, "-");
         CONSTANT_TOKEN_CASE(TOKEN_PLUS, "+");
         CONSTANT_TOKEN_CASE(TOKEN_SEMICOLON, ";");
+        CONSTANT_TOKEN_CASE(TOKEN_MODULO, "%");
         CONSTANT_TOKEN_CASE(TOKEN_SLASH, "/");
         CONSTANT_TOKEN_CASE(TOKEN_STAR, "*");
         CONSTANT_TOKEN_CASE(TOKEN_QUESTION, "?");
@@ -60,6 +61,9 @@ void printToken(Token tok) {
         TOKEN_TEXT_CASE(TOKEN_IDENTIFIER);
         TOKEN_TEXT_CASE(TOKEN_STRING);
         TOKEN_TEXT_CASE(TOKEN_NUMBER);
+    default:
+        std::cout << "Unknown token : " << tok.type << " : " << tok.text
+                  << std::endl;
     }
 }
 

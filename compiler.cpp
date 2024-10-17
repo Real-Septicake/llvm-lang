@@ -53,6 +53,8 @@ llvm::Value *compiler::Compiler::genBinaryExpr(AST::Binary *expr) {
         return builder->CreateFSub(left, right, DEBUG_NAME("sub_tmp"));
     case TokenKind::TOKEN_STAR:
         return builder->CreateFMul(left, right, DEBUG_NAME("mul_tmp"));
+    case TokenKind::TOKEN_MODULO:
+        return builder->CreateFRem(left, right, DEBUG_NAME("rem_tmp"));
     case TokenKind::TOKEN_SLASH:
         return builder->CreateFDiv(left, right, DEBUG_NAME("div_tmp"));
     case TokenKind::TOKEN_GREATER:
@@ -532,6 +534,8 @@ llvm::Value *compiler::Compiler::genWhileStmt(AST::While *stmt) {
         llvm::BasicBlock::Create(*context, DEBUG_NAME("while.end"));
     break_block = merge_block;
 
+    begin_scope();
+
     builder->CreateBr(condition);
     builder->SetInsertPoint(condition);
     llvm::Value *cond = toBool(stmt->condition->codegen(this));
@@ -540,6 +544,7 @@ llvm::Value *compiler::Compiler::genWhileStmt(AST::While *stmt) {
     parent->insert(parent->end(), body);
     builder->SetInsertPoint(body);
     stmt->body->codegen(this);
+
     if (br_created)
         br_created = false;
     else
@@ -547,12 +552,69 @@ llvm::Value *compiler::Compiler::genWhileStmt(AST::While *stmt) {
 
     parent->insert(parent->end(), merge_block);
     builder->SetInsertPoint(merge_block);
+
+    end_scope();
+
     break_block = prev_break;
     cont_block  = prev_cont;
+
     return nullptr;
 }
 
 llvm::Value *compiler::Compiler::genForStmt(AST::For *stmt) {
+    llvm::Function *parent = builder->GetInsertBlock()->getParent();
+
+    llvm::BasicBlock *prev_break = break_block;
+    llvm::BasicBlock *prev_cont  = cont_block;
+
+    llvm::BasicBlock *init =
+        llvm::BasicBlock::Create(*context, DEBUG_NAME("for.init"), parent);
+    llvm::BasicBlock *condition =
+        llvm::BasicBlock::Create(*context, DEBUG_NAME("for.cond"));
+    llvm::BasicBlock *increment =
+        llvm::BasicBlock::Create(*context, DEBUG_NAME("for.step"));
+    cont_block = increment;
+    llvm::BasicBlock *body =
+        llvm::BasicBlock::Create(*context, DEBUG_NAME("for.body"));
+    llvm::BasicBlock *merge =
+        llvm::BasicBlock::Create(*context, DEBUG_NAME("for.end"));
+    break_block = merge;
+
+    begin_scope();
+
+    builder->CreateBr(init);
+    builder->SetInsertPoint(init);
+    if (stmt->initializer)
+        stmt->initializer->codegen(this);
+    builder->CreateBr(condition);
+
+    parent->insert(parent->end(), condition);
+    builder->SetInsertPoint(condition);
+    llvm::Value *cond = stmt->condition->codegen(this);
+    builder->CreateCondBr(cond, body, merge);
+
+    parent->insert(parent->end(), body);
+    builder->SetInsertPoint(body);
+    stmt->body->codegen(this);
+    if (br_created)
+        br_created = false;
+    else
+        builder->CreateBr(increment);
+
+    parent->insert(parent->end(), increment);
+    builder->SetInsertPoint(increment);
+    if (stmt->increment)
+        stmt->increment->codegen(this);
+    builder->CreateBr(condition);
+
+    end_scope();
+
+    parent->insert(parent->end(), merge);
+    builder->SetInsertPoint(merge);
+
+    cont_block  = prev_cont;
+    break_block = prev_break;
+
     return nullptr;
 }
 

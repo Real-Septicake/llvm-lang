@@ -1,12 +1,11 @@
 fn func2(n : num) : num {
-    return 2 * 8 + n;
+    return 2 * (8 + n);
 }
 
 fn func(rep : num) : void {
-    var i : num = 0;
-    while(i < rep) {
-        print func2(i) / 3;
-        i = i + 1;
+    for(var i : num = 0; i < rep; i = i + 1) {
+        if(i % 2 == 0)
+            print func2(i);
     }
     return;
 }

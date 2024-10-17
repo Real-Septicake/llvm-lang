@@ -124,6 +124,9 @@ void Scanner::scanToken() {
         addToken(match('=') ? TokenKind::TOKEN_GREATER_EQUAL
                             : TokenKind::TOKEN_GREATER);
         break;
+    case '%':
+        addToken(TokenKind::TOKEN_MODULO);
+        break;
     case '/':
         if (match('/')) {
             while (peek() != '\n' && !isAtEnd())
