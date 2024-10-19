@@ -710,7 +710,7 @@ int compiler::Compiler::write(std::string file) {
     auto target = llvm::TargetRegistry::lookupTarget(target_triple, error);
 
     if (!target) {
-        llvm::errs() << error;
+        llvm::errs() << error << "\n";
         return 1;
     }
 
