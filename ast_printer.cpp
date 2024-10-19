@@ -105,6 +105,17 @@ void ASTPrinter::visitBlockStmt(AST::Block *stmt) {
     std::cout << "end block)" << std::endl;
 }
 
+void ASTPrinter::visitProtoStmt(AST::Proto *stmt) {
+    std::cout << "(extern " << stmt->name->text << " (";
+    for (int i = 0; i < stmt->types.size(); i++) {
+        if (i)
+            std::cout << ", ";
+        std::cout << stmt->types[i].second->text;
+    }
+    std::cout << ") : " << stmt->ret_type.second->text << " end extern)"
+              << std::endl;
+}
+
 void ASTPrinter::visitExpressionStmt(AST::Expression *stmt) {
     std::cout << "(; ";
     stmt->expression->accept(this);

@@ -50,6 +50,7 @@ class Compiler : public AST::ExprVisitor, public AST::StmtVisitor {
     virtual llvm::Value *genLiteralExpr(AST::Literal *expr) override;
     virtual llvm::Value *genBlockStmt(AST::Block *stmt) override;
     virtual llvm::Value *genExpressionStmt(AST::Expression *stmt) override;
+    virtual llvm::Value *genProtoStmt(AST::Proto *stmt) override;
     virtual llvm::Value *genFunctionStmt(AST::Function *stmt) override;
     virtual llvm::Value *genClassStmt(AST::Class *stmt) override;
     virtual llvm::Value *genIfStmt(AST::If *stmt) override;

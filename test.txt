@@ -1,11 +1,16 @@
+extern sin(num) : num;
+
 fn func2(n : num) : num {
     return 2 * (8 + n);
 }
 
 fn func(rep : num) : void {
     for(var i : num = 0; i < rep; i = i + 1) {
-        if(i % 2 == 0)
-            print func2(i);
+        print i;
+        if(toBool(i)) {
+            var v : bool = toBool(i);
+            print v;
+        }
     }
     return;
 }

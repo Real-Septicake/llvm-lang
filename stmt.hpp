@@ -15,6 +15,7 @@ enum StmtType {
     BlockType,
     ExpressionType,
     FunctionType,
+    ProtoType,
     ClassType,
     IfType,
     PrintType,
@@ -73,6 +74,19 @@ class Function : public Stmt {
              std::vector<std::pair<value::ValueType, Token *>> types,
              std::pair<value::ValueType, Token *> ret_type,
              std::vector<Stmt *> body);
+    void accept(StmtVisitor *visitor) override;
+    llvm::Value *codegen(StmtVisitor *visitor) override;
+};
+
+/// @brief The node for a proto statement
+class Proto : public Stmt {
+  public:
+    Token *name;
+    std::vector<std::pair<value::ValueType, Token *>> types;
+    std::pair<value::ValueType, Token *> ret_type;
+    bool is_intern;
+    Proto(Token *name, std::vector<std::pair<value::ValueType, Token *>> types,
+          std::pair<value::ValueType, Token *> ret_type, bool is_intern);
     void accept(StmtVisitor *visitor) override;
     llvm::Value *codegen(StmtVisitor *visitor) override;
 };
@@ -198,6 +212,14 @@ class StmtVisitor {
         return;
     }
     virtual llvm::Value *genFunctionStmt(AST::Function *stmt) {
+        return nullptr;
+    }
+    /// @brief Visit the AST::Proto node
+    /// @param stmt The node to visit
+    virtual void visitProtoStmt(AST::Proto *stmt) {
+        return;
+    }
+    virtual llvm::Value *genProtoStmt(AST::Proto *stmt) {
         return nullptr;
     }
     /// @brief Visit the AST::Class node

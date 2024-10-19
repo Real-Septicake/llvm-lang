@@ -32,7 +32,7 @@ loc:
 	cloc --exclude-dir=termcolor .
 
 link-file:
-	@g++ out.o main.cpp
+	@g++ -O0 main.cpp out.o
 
 format: $(C_FILES)
 	@for file in $?; do \

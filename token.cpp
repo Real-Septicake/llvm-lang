@@ -43,6 +43,7 @@ void printToken(Token tok) {
         CONSTANT_TOKEN_CASE(TOKEN_BREAK, "break");
         CONSTANT_TOKEN_CASE(TOKEN_CONTINUE, "continue");
         CONSTANT_TOKEN_CASE(TOKEN_ELSE, "else");
+        CONSTANT_TOKEN_CASE(TOKEN_EXTERN, "extern");
         CONSTANT_TOKEN_CASE(TOKEN_FALSE, "false");
         CONSTANT_TOKEN_CASE(TOKEN_FOR, "for");
         CONSTANT_TOKEN_CASE(TOKEN_FN, "fn");

@@ -99,6 +99,8 @@ llvm::Value *compiler::Compiler::genCallExpr(AST::Call *expr) {
     }
 
     llvm::Function *callee = module->getFunction(gen_func_name(tys, name));
+    if (!callee)
+        callee = module->getFunction(name);
 
     if (!callee) {
         error::error(expr->paren,
@@ -110,8 +112,6 @@ llvm::Value *compiler::Compiler::genCallExpr(AST::Call *expr) {
     }
 
     if (callee->arg_size() != expr->args.size()) {
-        // std::cerr << "Incorrect number of args passed, expected " <<
-        // callee->arg_size() << " but got " << expr->args.size() << std::endl;
         error::error(expr->paren,
                      std::string("Incorrect number of args passed, expected ")
                          .append(std::to_string(callee->arg_size()))
@@ -227,6 +227,23 @@ llvm::Value *compiler::Compiler::genBlockStmt(AST::Block *stmt) {
 
 llvm::Value *compiler::Compiler::genExpressionStmt(AST::Expression *stmt) {
     stmt->expression->codegen(this);
+    return nullptr;
+}
+
+llvm::Value *compiler::Compiler::genProtoStmt(AST::Proto *stmt) {
+    std::vector<llvm::Type *> tys;
+    for (auto t : stmt->types) {
+        tys.push_back(value_to_type(t.first)(*context));
+    }
+
+    llvm::FunctionType *func_ty = llvm::FunctionType::get(
+        value_to_type(stmt->ret_type.first)(*context), tys, false);
+
+    llvm::Function *f = llvm::Function::Create(
+        func_ty, llvm::Function::ExternalLinkage,
+        (stmt->is_intern ? gen_func_name(tys, stmt->name->text)
+                         : stmt->name->text),
+        *module);
     return nullptr;
 }
 
@@ -385,14 +402,10 @@ llvm::Value *compiler::Compiler::genIfStmt(AST::If *stmt) {
 }
 
 llvm::Value *compiler::Compiler::genPrintStmt(AST::Print *stmt) {
-    llvm::FunctionCallee print_func = module->getOrInsertFunction(
-        "printf",
-        llvm::FunctionType::get(
-            llvm::IntegerType::getInt32Ty(*context),
-            llvm::PointerType::get(llvm::Type::getInt8Ty(*context), 0), true));
+    llvm::Function *print_func = module->getFunction("printf");
 
     llvm::Value *fmt  = print_fmt;
-    llvm::Value *expr = stmt->expression->codegen(this);
+    llvm::Value *expr = toFloat(stmt->expression->codegen(this));
 
     if (!expr) {
         error::error(stmt->keyword, "Error evaluating expression");
@@ -646,6 +659,12 @@ compiler::Compiler::Compiler(std::string file_name) {
     module->setSourceFileName(file_name);
     builder = new llvm::IRBuilder(*context);
 
+    llvm::Function::Create(
+        llvm::FunctionType::get(
+            llvm::IntegerType::getInt32Ty(*context),
+            llvm::PointerType::get(llvm::Type::getInt8Ty(*context), 0), true),
+        llvm::Function::ExternalLinkage, "printf", *module);
+
     init_lib();
 
     print_fmt = builder->CreateGlobalStringPtr("%f\n", DEBUG_NAME("print_fmt"),
@@ -672,6 +691,9 @@ void compiler::Compiler::verify() {
     builder->CreateRetVoid();
     if (llvm::verifyFunction(*(builder->GetInsertBlock()->getParent()),
                              &(llvm::errs()))) {
+        errored = true;
+    }
+    if (llvm::verifyModule(*module, &(llvm::errs()))) {
         errored = true;
     }
 }

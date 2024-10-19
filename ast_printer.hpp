@@ -28,6 +28,7 @@ class ASTPrinter : public AST::ExprVisitor, public AST::StmtVisitor {
     void visitVariableExpr(AST::Variable *expr) override;
     void visitLiteralExpr(AST::Literal *expr) override;
     void visitBlockStmt(AST::Block *stmt) override;
+    void visitProtoStmt(AST::Proto *stmt) override;
     void visitExpressionStmt(AST::Expression *stmt) override;
     void visitFunctionStmt(AST::Function *stmt) override;
     void visitClassStmt(AST::Class *stmt) override;

@@ -38,6 +38,22 @@ llvm::Value *AST::Function::codegen(StmtVisitor *visitor) {
     return visitor->genFunctionStmt(this);
 }
 
+AST::Proto::Proto(Token *name,
+                  std::vector<std::pair<value::ValueType, Token *>> types,
+                  std::pair<value::ValueType, Token *> ret_type, bool is_intern)
+    : Stmt(StmtType::ProtoType) {
+    this->name      = name;
+    this->types     = types;
+    this->ret_type  = ret_type;
+    this->is_intern = is_intern;
+}
+void AST::Proto::accept(StmtVisitor *visitor) {
+    visitor->visitProtoStmt(this);
+}
+llvm::Value *AST::Proto::codegen(StmtVisitor *visitor) {
+    return visitor->genProtoStmt(this);
+}
+
 AST::Class::Class(Token *name, AST::Variable *superclass,
                   std::vector<AST::Function *> methods)
     : Stmt(StmtType::ClassType) {

@@ -117,6 +117,7 @@ defineAst("Stmt", "statement", [
     ("Block", "std::vector<Stmt*> statements"),
     ("Expression", "Expr* expression"),
     ("Function", "Token* name, std::vector<Token*> params, std::vector<std::pair<value::ValueType\"comma\"Token*>> types, std::pair<value::ValueType\"comma\"Token*> ret_type, std::vector<Stmt*> body"),
+    ("Proto", "Token* name, std::vector<std::pair<value::ValueType\"comma\"Token*>> types, std::pair<value::ValueType\"comma\"Token*> ret_type, bool is_intern"),
     ("Class", "Token* name, AST::Variable* superclass, std::vector<AST::Function*> methods"),
     ("If", "Token* paren, Expr* condition, Stmt* thenBranch, Stmt* elseBranch"),
     ("Print", "Token* keyword, Expr* expression"),

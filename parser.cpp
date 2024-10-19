@@ -109,6 +109,8 @@ parser::ParseError parser::Parser::error(Token *token, std::string message) {
 
 Stmt *parser::Parser::declaration() {
     try {
+        if (match({TOKEN_EXTERN, TOKEN_INTERN}))
+            return proto();
         if (match({TOKEN_FN}))
             return function("function");
         if (match({TOKEN_VAR}))
@@ -150,6 +152,26 @@ AST::Function *parser::Parser::function(std::string kind) {
     consume(TOKEN_LEFT_BRACE, "Expect '{' before " + kind + " body.");
     std::vector<Stmt *> body = block();
     return new AST::Function(name, params, types, ret_type, body);
+}
+
+AST::Proto *parser::Parser::proto() {
+    Token *ident = previous();
+    Token *name  = consume(TOKEN_IDENTIFIER, "Expect extern function name.");
+
+    consume(TOKEN_LEFT_PAREN, "Expect '(' after extern funcion name.");
+    std::vector<std::pair<value::ValueType, Token *>> types;
+    if (!check(TOKEN_RIGHT_PAREN)) {
+        do {
+            auto type = consume_type(TypeExpect::VAR);
+            types.push_back(type);
+        } while (match({TOKEN_COMMA}));
+    }
+    consume(TOKEN_RIGHT_PAREN, "Expect ')' after types.");
+    consume(TOKEN_COLON, "Expect ':' after extern function parameters.");
+    auto ret_type = consume_type(TypeExpect::FN);
+    consume(TOKEN_SEMICOLON, "Expect ';' after extern function.");
+    return new AST::Proto(name, types, ret_type,
+                          ident->type == TokenKind::TOKEN_INTERN);
 }
 
 AST::Var *parser::Parser::varDeclaration() {
