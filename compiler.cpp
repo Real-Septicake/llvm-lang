@@ -17,7 +17,7 @@
 
 #ifdef DEBUG
 #define DEBUG_NAME(name)  (name)
-#define VERIFY_FUNC(func) llvm::verifyFunction((func), &(llvm::errs()))
+#define VERIFY_FUNC(func) llvm::verifyFunction((func), &(llvm::errs())) && &(llvm::errs() << "\n")
 #else
 #define DEBUG_NAME(name)  ""
 #define VERIFY_FUNC(func) llvm::verifyFunction((func))
@@ -603,7 +603,7 @@ llvm::Value *compiler::Compiler::genForStmt(AST::For *stmt) {
 
     parent->insert(parent->end(), condition);
     builder->SetInsertPoint(condition);
-    llvm::Value *cond = stmt->condition->codegen(this);
+    llvm::Value *cond = toBool(stmt->condition->codegen(this));
     builder->CreateCondBr(cond, body, merge);
 
     parent->insert(parent->end(), body);
@@ -740,15 +740,17 @@ int compiler::Compiler::write(std::string file) {
 }
 
 llvm::Value *compiler::Compiler::toBool(llvm::Value *val) {
-    if (val->getType()->isIntegerTy())
+    if (val->getType()->isIntegerTy() && val->getType()->getIntegerBitWidth() == 1)
         return val;
-    return builder->CreateFCmpONE(
-        val, llvm::ConstantFP::get(*context, llvm::APFloat(0.0)),
-        DEBUG_NAME("d_to_i"));
+    if (val->getType()->isDoubleTy())
+        return builder->CreateFCmpONE(
+            val, llvm::ConstantFP::get(*context, llvm::APFloat(0.0)),
+            DEBUG_NAME("d_to_i"));
+    return builder->CreateICmpNE(val, llvm::ConstantInt::get(*context, llvm::APInt()));
 }
 
 llvm::Value *compiler::Compiler::awayFromBool(llvm::Value *val) {
-    if (val->getType()->isIntegerTy())
+    if (!val->getType()->isDoubleTy())
         return toFloat(val);
     return val;
 }
@@ -783,7 +785,14 @@ llvm::Value *compiler::Compiler::castToType(llvm::Type *ty, llvm::Value *val) {
     case llvm::Type::TypeID::DoubleTyID:
         return toFloat(val);
     case llvm::Type::TypeID::IntegerTyID:
-        return toBool(val);
+        if (ty->getIntegerBitWidth() == 1)
+            return toBool(val);
+        else {
+            std::cerr << termcolor::bright_red << termcolor::bold
+                      << "Unsupported integer bit width: "
+                      << ty->getIntegerBitWidth() << "\n"
+                      << termcolor::reset;
+        }
     }
     return nullptr;
 }
@@ -791,7 +800,10 @@ llvm::Value *compiler::Compiler::castToType(llvm::Type *ty, llvm::Value *val) {
 std::string compiler::Compiler::type_to_string(llvm::Type *ty) {
     switch (ty->getTypeID()) {
     case llvm::Type::IntegerTyID:
-        return "b";
+        if (ty->getIntegerBitWidth() == 1)
+            return "b";
+        else
+            return "i";
     case llvm::Type::DoubleTyID:
         return "d";
     }
