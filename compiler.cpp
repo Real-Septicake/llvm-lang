@@ -730,7 +730,7 @@ int compiler::Compiler::write(std::string file) {
     auto file_type = llvm::CodeGenFileType::ObjectFile;
 
     if (target_machine->addPassesToEmitFile(pass, dest, nullptr, file_type)) {
-        llvm::errs() << "Target machine can't emit a file of this type.";
+        llvm::errs() << "Target machine can't emit a file of this type.\n";
         return 1;
     }
 
