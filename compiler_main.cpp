@@ -2,7 +2,6 @@
 #include "ast_printer.hpp"
 #include "compiler.hpp"
 #include "error.hpp"
-#include "expr.hpp"
 #include "parser.hpp"
 #include "scanner.hpp"
 #include "stmt.hpp"

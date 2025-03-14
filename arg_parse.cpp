@@ -41,5 +41,4 @@ error_t parse_args(int argc, char **argv) {
     arg_struct.debug    = false;
 
     return argp_parse(&argp, argc, argv, 0, 0, &arg_struct);
-    ;
 }

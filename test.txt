@@ -1,18 +1,10 @@
-extern sin(num) : num;
-
-fn func2(n : num) : num {
-    return 2 * (8 + n);
+fn func(a : num) : void {
+    print 4444444444444444444;
 }
 
-fn func(rep : num) : void {
-    for(var i : num = 0; i < rep; i = i + 1) {
-        print i;
-        if(toBool(i)) {
-            var v : bool = toBool(i);
-            print v;
-        }
-    }
+fn func(a : bool) : void {
+    print a;
     return;
 }
 
-func(12);
+func(2);

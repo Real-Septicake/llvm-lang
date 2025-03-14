@@ -205,7 +205,6 @@ void ASTPrinter::visitForStmt(AST::For *stmt) {
     std::cout << "(for ";
     if (stmt->initializer != nullptr) {
         stmt->initializer->accept(this);
-        // std::cout << "\b ";
     }
     std::cout << "while ";
     stmt->condition->accept(this);

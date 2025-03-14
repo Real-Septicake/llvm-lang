@@ -3,7 +3,6 @@
 #include "error.hpp"
 #include "value.hpp"
 
-#include <iostream>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -39,6 +38,8 @@ void parser::Parser::synchronize() {
         case TokenKind::TOKEN_PRINT:
         case TokenKind::TOKEN_RETURN:
             return;
+        default:
+            break;
         }
 
         advance();
@@ -233,13 +234,13 @@ AST::For *parser::Parser::forStatement() {
     }
 
     Expr *condition = new AST::Literal(value::boolVal(true));
-    if (!check({TOKEN_SEMICOLON})) {
+    if (!check(TOKEN_SEMICOLON)) {
         condition = expression();
     }
     consume(TOKEN_SEMICOLON, "Expect ';' after loop condition");
 
     Expr *increment = nullptr;
-    if (!check({TOKEN_RIGHT_PAREN})) {
+    if (!check(TOKEN_RIGHT_PAREN)) {
         increment = expression();
     }
     consume(TOKEN_RIGHT_PAREN, "Expect ')' after for clauses.");

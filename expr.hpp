@@ -5,7 +5,6 @@
 #include "value.hpp"
 
 #include <llvm/IR/Value.h>
-#include <utility>
 #include <vector>
 /// @brief A namespace containing members used for the creation and usage of the
 /// abstract syntax tree

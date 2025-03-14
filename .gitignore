@@ -2,3 +2,5 @@
 build/
 *.out
 *.o
+
+compile_flags.txt

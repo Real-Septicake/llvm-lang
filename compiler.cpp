@@ -673,8 +673,8 @@ compiler::Compiler::Compiler(std::string file_name) {
 
     init_lib();
 
-    print_fmt = builder->CreateGlobalStringPtr(
-        "%.4f\n", debug_name("print_fmt"), 0U, module);
+    print_fmt = builder->CreateGlobalStringPtr("%f\n", debug_name("print_fmt"),
+                                               0U, module);
 
     llvm::Function *top_level = llvm::Function::Create(
         llvm::FunctionType::get(llvm::Type::getVoidTy(*context), false),

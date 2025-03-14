@@ -67,5 +67,3 @@ void printToken(Token tok) {
                   << std::endl;
     }
 }
-
-#undef BASIC_TOKEN_CASE
